@@ -1,5 +1,6 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { Button, CardLink, Col, Container, Form, Image, Row } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { login } from "../services/auth";
 import api from "../services/api";
 
@@ -82,7 +83,9 @@ const Login = (): ReactElement => {
 
             <hr/>
 
-            <Button variant="outline-light" className="w-100">Criar conta</Button>
+             <Link to="/cadastro" className="btn btn-outline-light w-100">
+              Criar conta
+            </Link>
           </Form>
         </Col>
       </Row>

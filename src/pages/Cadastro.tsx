@@ -1,11 +1,20 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
-import { cadastro } from "../services/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+
+interface CadastroData {
+  nome: string;
+  email: string;
+  senha?: string;
+}
+const servicoCadastro = async (data: CadastroData) => {
+  console.log("Dados para cadastro no backend:", data);
+  return new Promise(resolve => setTimeout(() => resolve({ message: "Usuário cadastrado" }), 1000));
+};
 
 
 const Cadastro = (): ReactElement => {
-  const [nome,  setNome ] = useState<string>("")
+  const [nome, setNome] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
   const [confSenha, setConfSenha] = useState<string>("");
@@ -27,60 +36,69 @@ const Cadastro = (): ReactElement => {
     setConfSenha(event.target.value);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.info("Nome:", nome)
+
+    if (senha !== confSenha) {
+      alert("As senhas não coincidem!");
+      return;
+    }
+
+    console.info("Nome:", nome);
     console.info("Email:", email);
-    console.info("Senha:", senha);
-    console.info("confSenha:", confSenha);
 
-    cadastro(nome + email + senha + confSenha);
+    try {
+      await servicoCadastro({ nome, email, senha });
 
-    alert("Cadastrado com sucesso!");
-    navigate("/entrar");
+      alert("Cadastrado com sucesso!");
+      navigate("/entrar");
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      alert("Erro ao cadastrar. Verifique os dados ou tente mais tarde.");
+    }
   };
 
   return (
-    <Container fluid className="vh-100">
-      <Row className="h-100">
-        <Col md={8} className="d-flex flex-column justify-content-center align-items-center bg-light">
+    <Container fluid className="vh-100 p-0">
+      <Row className="vh-100 p-0 m-0 gap-0">
+        <Col md={8} className="d-none d-md-flex vh-100 flex-column justify-content-center align-items-center bg-light p-0">
           <Image src="/img/mapa.png" alt="Mapa do Brasil" className="mapa" />
           <h1 className="fs-1 text-blue">APAE CRICIÚMA</h1>
         </Col>
 
-        <Col md={4} className="d-flex flex-column justify-content-center align-items-center bg-blue">
-          <Form onSubmit={handleSubmit}>
-            <div className="logo-wrapper">
-              <Image src="/img/logo.png" alt="Logo da APAE" className="logo text-center" />
+        <Col md={4} className="d-flex vh-100 flex-column justify-content-center align-items-center bg-blue p-0">
+          <Form onSubmit={handleSubmit} className="w-75">
+            <div className="logo-wrapper text-center mb-4">
+              <Image src="/img/logo.png" alt="Logo da APAE" className="logo" style={{ width: '100px', height: 'auto' }}/>
             </div>
 
-            <h2 className="text-center mb-4">CADASTRO</h2>
+            <h2 className="text-center mb-4 text-white">CADASTRO</h2>
 
-            <Form.Group className="mb-3" controlId="formNome">
-              <Form.Label>Nome</Form.Label>
-              <Form.Control onChange={handleNomeChange} type="nome" placeholder="Digite seu nome" />
+            <Form.Group className="mb-3" controlId="formNomeCadastro">
+              <Form.Label className="text-white">Nome</Form.Label>
+              <Form.Control onChange={handleNomeChange} value={nome} type="text" placeholder="Digite seu nome completo" required />
             </Form.Group>
             
-            <Form.Group className="mb-3" controlId="formEmail">
-              <Form.Label>Email</Form.Label>
-              <Form.Control onChange={handleEmailChange} type="email" placeholder="Digite seu email" />
+            <Form.Group className="mb-3" controlId="formEmailCadastro">
+              <Form.Label className="text-white">Email</Form.Label>
+              <Form.Control onChange={handleEmailChange} value={email} type="email" placeholder="Digite seu email" required />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="formPassword">
-              <Form.Label>Senha</Form.Label>
-              <Form.Control type="password" onChange={handleSenhaChange} placeholder="Digite sua senha" />
+            <Form.Group className="mb-3" controlId="formPasswordCadastro">
+              <Form.Label className="text-white">Senha</Form.Label>
+              <Form.Control type="password" onChange={handleSenhaChange} value={senha} placeholder="Digite sua senha" required />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="formPassword">
-              <Form.Label>Confirmar Senha</Form.Label>
-              <Form.Control type="password" onChange={handleConfSenhaChange} placeholder="Confirme sua senha" />
+            <Form.Group className="mb-3" controlId="formConfirmPasswordCadastro">
+              <Form.Label className="text-white">Confirmar Senha</Form.Label>
+              <Form.Control type="password" onChange={handleConfSenhaChange} value={confSenha} placeholder="Confirme sua senha" required />
             </Form.Group>
 
             <Button variant="primary" type="submit" className="w-100 btn-white">Criar conta</Button>
-
-            <hr/>
-
-            <Button variant="outline-light" className="w-100">Entrar</Button>
+            <hr className="text-white"/>
+            <Button variant="outline-light" className="w-100" onClick={() => navigate("/entrar")}>
+              Já tenho conta (Entrar)
+            </Button>
           </Form>
         </Col>
       </Row>

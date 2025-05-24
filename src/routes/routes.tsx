@@ -4,26 +4,27 @@ import Login from "../pages/Login";
 import RotasPrivadas from "./RotasPrivadas";
 import { estaAutenticado } from "../services/auth";
 import Cadastro from "../pages/Cadastro";
+import EsqueciSenha from "../pages/EsqueciSenha";
 
-/**
- * @description Rotas da App.
- * @author Lucas Ronchi <@lucas0headshot>
- * @since 31/10/2024
- * @see https://dev.to/franklin030601/route-protection-with-react-router-dom-12gm
- */
-const Rotas = (): ReactElement => (
+const Rotas = (): ReactElement => {
+  const autenticado = estaAutenticado();
+
+  return (
     <BrowserRouter>
-        <Routes>
-            {
-                estaAutenticado()
-                    ? <Route path="/*" element={<RotasPrivadas />} />
-                    : <Route path="/entrar" element={<Login />} />
-            }
-
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="*" element={<Navigate to="/entrar" />} />
-        </Routes>
+      <Routes>
+        {autenticado ? (
+          <Route path="/*" element={<RotasPrivadas />} />
+        ) : (
+          <>
+            <Route path="/entrar" element={<Login />} />
+            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+          </>
+        )}
+        <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="*" element={<Navigate to={autenticado ? "/" : "/entrar"} replace />} />
+      </Routes>
     </BrowserRouter>
-);
+  );
+};
 
 export default Rotas;
