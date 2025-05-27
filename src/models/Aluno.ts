@@ -23,6 +23,7 @@ interface Aluno {
     numero: number;
     complemento: string;
     cep: string;
+    ibge: string;
 }
 
 export default Aluno;

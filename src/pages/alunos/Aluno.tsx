@@ -33,6 +33,8 @@ const Aluno = (): ReactElement => {
     rua: '',
     numero: 0,
     complemento: '',
+    cep: '',
+    ibge: ''
   });
 
   useEffect(() => {
@@ -47,6 +49,21 @@ const Aluno = (): ReactElement => {
     try {
       const response = await api.get<{ content: ModelAluno }>(`/alunos/${id}`);
       setFormData(response.data);
+
+      const cep = response.data.cep.replace(/\D/g, "");
+      if (cep.length === 8) {
+        const data = await buscarDadosCep(cep);
+        if (!data.erro) {
+          setFormData((prevData) => ({
+            ...prevData,
+            estado: data.uf,
+            cidade: data.localidade,
+            bairro: data.bairro,
+            rua: data.logradouro,
+            ibge: data.ibge,
+          }));
+        }
+      }
     } catch (err) {
       console.error('Erro ao realizar GET em aulas:', err);
     } finally {
@@ -56,18 +73,54 @@ const Aluno = (): ReactElement => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(`Campo alterado: ${name}, Valor: ${value}`)
     setFormData({
       ...formData,
       [name]: value,
     });
   };
 
+  const aplicarMascaraCep = (cep: string): string => {
+    return cep.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").slice(0, 9);
+  };
+
+  const buscarDadosCep = async (cep: string) => {
+    const response = await api.get(`https://viacep.com.br/ws/${cep}/json/`);
+    return response.data;
+  };
+
+  const handleCepBlur = async () => {
+    const cep = formData.cep.replace(/\D/g, "");
+    if (cep.length === 8) {
+      try {
+        const data = await buscarDadosCep(cep);
+        if (!data.erro) {
+          setFormData({
+            ...formData,
+            estado: data.uf,
+            cidade: data.localidade,
+            bairro: data.bairro,
+            rua: data.logradouro,
+            ibge: data.ibge,
+          });
+        } else {
+          alert("CEP não encontrado");
+        }
+      } catch (err) {
+        console.log("Erro ao buscar CEP:", err);
+      }
+    } else {
+      alert("CEP inválido!");
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Dados enviados:", formData);
     try {
       const endpoint = id ? `/alunos/${id}` : '/alunos/create';
       const method = id ? "put" : "post";
-
       const response = await api[method](endpoint, formData);
 
       if ([200, 201].includes(response.status)) {
@@ -146,9 +199,30 @@ const Aluno = (): ReactElement => {
               <Form.Control as="textarea" name="observacoes" value={formData.observacoes} onChange={handleChange} placeholder="Adicione observações" rows={3} />
             </Form.Group>
 
+            <Form.Group controlId="cep" as={Col}>
+              <Form.Label>CEP</Form.Label>
+              <InputMask
+                  mask="99999-999"
+                  value={formData.cep}
+                  onChange={(e) => setFormData({ ...formData, cep: aplicarMascaraCep(e.target.value) })}
+                  onBlur={handleCepBlur}
+              >
+                {(inputProps) => (
+                    <Form.Control
+                        {...inputProps}
+                        type="text"
+                        name="cep"
+                        placeholder="Digite o CEP"
+                        required
+                    />
+                )}
+              </InputMask>
+            </Form.Group>
+
             <Form.Group controlId="endereco" as={Col}>
               <Form.Label>Endereço</Form.Label>
               <Row className="gap-2">
+
                 <Col sm={6}>
                   <SelectEstados controlId="estado" value={formData.estado} onChange={handleChange} />
                 </Col>

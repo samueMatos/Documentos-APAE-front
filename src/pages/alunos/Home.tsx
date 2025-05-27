@@ -52,6 +52,7 @@ const Home = (): ReactElement => {
 
         try {
             const resposta = await api.get<{ content: Aluno[] }>('/alunos/all');
+            console.log(resposta);
             setAlunos(resposta.data || []);
             setAlunosFiltrados(resposta.data || []);
         } catch (err) {
