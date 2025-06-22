@@ -7,6 +7,10 @@ import DocumentosPage from "../pages/documentos/DocumentosPage";
 import DocumentosCadastro from "../pages/documentos/DocumentosCadastro";
 import Aluno from "../pages/alunos/Aluno";
 import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
+// Adicione estas importações
+import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
+import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
+
 
 /**
  * @description Rotas privadas da App.
@@ -25,6 +29,14 @@ const RotasPrivadas = (): ReactElement => (
                 <Route path="cadastrar" element={<Aluno />} />
                 <Route path="editar/:id" element={<Aluno />} />
                 <Route path="*" element={<Navigate to="/alunos" replace />} />
+            </Route>
+
+            {/* Adicione este bloco de rotas */}
+            <Route path="tipo-documento">
+                <Route index element={<HomeTipoDocumento />} />
+                <Route path="novo" element={<FormTipoDocumento />} />
+                <Route path="editar/:id" element={<FormTipoDocumento />} />
+                <Route path="*" element={<Navigate to="/tipo-documento" replace />} />
             </Route>
 
             <Route path="documentos" element={<DocumentosPage />} />
