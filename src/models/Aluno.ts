@@ -8,11 +8,10 @@ interface Aluno {
     nome: string;
     dataNascimento: string;
     cpf: string;
-    cpfResponsavel: string;
     isAtivo?: boolean;
     telefone: string;
     sexo: string;
-    deficiencia: string;
+    deficiencia: File;
     dataEntrada?: string;
     observacoes: string;
     endereco: string;

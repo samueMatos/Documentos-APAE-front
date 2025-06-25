@@ -6,6 +6,7 @@ import ModelAluno from "../../models/Aluno";
 import InputMask from "react-input-mask";
 import SelectEstados from "../../components/alunos/SelectEstados";
 import Botao from "../../components/common/Botao";
+import {alunoService} from "../../services/alunoService.ts";
 
 /**
  * @description Página de Cadastro de Alunos.
@@ -20,11 +21,11 @@ const Aluno = (): ReactElement => {
     nome: '',
     dataNascimento: '',
     cpf: '',
-    cpfResponsavel: '',
     isAtivo: true,
     telefone: '',
     sexo: '',
-    deficiencia: '',
+    deficiencia: new File([], ''),
+    dataEntrada: '',
     observacoes: '',
     endereco: '',
     estado: '',
@@ -47,10 +48,14 @@ const Aluno = (): ReactElement => {
     setCarregando(true);
 
     try {
-      const response = await api.get<{ content: ModelAluno }>(`/alunos/${id}`);
-      setFormData(response.data);
+      const response = await alunoService.listarUmAluno(Number(id));
+      console.log(response);
+      setFormData((prevData) => ({
+        ...prevData,
+        ...response,
+      }));
 
-      const cep = response.data.cep.replace(/\D/g, "");
+      const cep = response.cep.replace(/\D/g, "");
       if (cep.length === 8) {
         const data = await buscarDadosCep(cep);
         if (!data.erro) {
@@ -65,7 +70,7 @@ const Aluno = (): ReactElement => {
         }
       }
     } catch (err) {
-      console.error('Erro ao realizar GET em aulas:', err);
+      console.error("Erro ao buscar aluno ou CEP:", err);
     } finally {
       setCarregando(false);
     }
@@ -119,14 +124,14 @@ const Aluno = (): ReactElement => {
     e.preventDefault();
     console.log("Dados enviados:", formData);
     try {
-      const endpoint = id ? `/alunos/${id}` : '/alunos/create';
-      const method = id ? "put" : "post";
-      const response = await api[method](endpoint, formData);
-
-      if ([200, 201].includes(response.status)) {
-        alert(`Aluno ${id ? "editado" : "cadastrado"} com sucesso!`);
-        navigate("/alunos");
+      if (id) {
+        await alunoService.atualizarAluno(Number(id), formData);
+      } else {
+        await alunoService.cadastrarAluno(formData);
       }
+
+      alert(`Aluno ${id ? "editado" : "cadastrado"} com sucesso!`);
+      navigate("/alunos");
     } catch (err) {
       console.error("Erro ao realizar POST/PUT em aluno:", err);
     }
@@ -162,15 +167,6 @@ const Aluno = (): ReactElement => {
               </InputMask>
             </Form.Group>
 
-            <Form.Group controlId="cpfResponsavel" as={Col}>
-              <Form.Label>CPF do Responsável</Form.Label>
-              <InputMask mask="999.999.999-99" value={formData.cpfResponsavel} onChange={handleChange} >
-                {(inputProps: InputGroupProps) => (
-                  <Form.Control {...inputProps} type="text" name="cpfResponsavel" placeholder="Digite o CPF do responsável" required />
-                )}
-              </InputMask>
-            </Form.Group>
-
             <Form.Group controlId="telefone" as={Col}>
               <Form.Label>Telefone</Form.Label>
               <InputMask mask="(99) 99999-9999" value={formData.telefone} onChange={handleChange} >
@@ -189,9 +185,14 @@ const Aluno = (): ReactElement => {
               </Form.Select>
             </Form.Group>
 
+            <Form.Group controlId="dataEntrada" as={Col}>
+              <Form.Label>Data de Entrada</Form.Label>
+              <Form.Control type="date" name="dataEntrada" value={formData.dataEntrada} onChange={handleChange} max={new Date().toISOString().split("T")[0]} />
+            </Form.Group>
+
             <Form.Group controlId="deficiencia" as={Col}>
               <Form.Label>Deficiência</Form.Label>
-              <Form.Control type="text" name="deficiencia" value={formData.deficiencia} onChange={handleChange} placeholder="Digite a deficiência" />
+              <Form.Control type="data" name="deficiencia" value={formData.deficiencia} onChange={handleChange} placeholder="Digite a deficiência" />
             </Form.Group>
 
             <Form.Group controlId="observacoes" as={Col}>
@@ -199,29 +200,27 @@ const Aluno = (): ReactElement => {
               <Form.Control as="textarea" name="observacoes" value={formData.observacoes} onChange={handleChange} placeholder="Adicione observações" rows={3} />
             </Form.Group>
 
-            <Form.Group controlId="cep" as={Col}>
-              <Form.Label>CEP</Form.Label>
-              <InputMask
-                  mask="99999-999"
-                  value={formData.cep}
-                  onChange={(e) => setFormData({ ...formData, cep: aplicarMascaraCep(e.target.value) })}
-                  onBlur={handleCepBlur}
-              >
-                {(inputProps) => (
-                    <Form.Control
-                        {...inputProps}
-                        type="text"
-                        name="cep"
-                        placeholder="Digite o CEP"
-                        required
-                    />
-                )}
-              </InputMask>
-            </Form.Group>
-
             <Form.Group controlId="endereco" as={Col}>
               <Form.Label>Endereço</Form.Label>
               <Row className="gap-2">
+
+                <Form.Label>CEP</Form.Label>
+                <InputMask
+                    mask="99999-999"
+                    value={formData.cep}
+                    onChange={(e) => setFormData({ ...formData, cep: aplicarMascaraCep(e.target.value) })}
+                    onBlur={handleCepBlur}
+                >
+                  {(inputProps) => (
+                      <Form.Control
+                          {...inputProps}
+                          type="text"
+                          name="cep"
+                          placeholder="Digite o CEP"
+                          required
+                      />
+                  )}
+                </InputMask>
 
                 <Col sm={6}>
                   <SelectEstados controlId="estado" value={formData.estado} onChange={handleChange} />
