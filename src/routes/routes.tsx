@@ -5,6 +5,7 @@ import RotasPrivadas from "./RotasPrivadas";
 import { estaAutenticado } from "../services/auth";
 import Cadastro from "../pages/Cadastro";
 import EsqueciSenha from "../pages/EsqueciSenha";
+import RedefinirSenha from "../pages/RedefinirSenha";
 
 const Rotas = (): ReactElement => {
   const autenticado = estaAutenticado();
@@ -18,6 +19,7 @@ const Rotas = (): ReactElement => {
           <>
             <Route path="/entrar" element={<Login />} />
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           </>
         )}
         <Route path="/cadastro" element={<Cadastro />} />
