@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
+import { ChangeEvent, FormEvent, ReactElement, useEffect, useState } from "react";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -18,7 +18,21 @@ const Cadastro = (): ReactElement => {
   const [email, setEmail] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
   const [confSenha, setConfSenha] = useState<string>("");
+  const [grupo, setGrupo] = useState<string>("");
+  const [grupos, setGrupos] = useState<{ id: string; nome: string }[]>([]);
+  const [carregandoGrupos, setCarregandoGrupos] = useState<boolean>(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Quando a API estiver pronta:
+    // api.get("/grupos")
+    //   .then(res => setGrupos(res.data))
+    //   .catch(() => setGrupos([]))
+    //   .finally(() => setCarregandoGrupos(false));
+
+    // Por enquanto, apenas marque como carregado e sem grupos
+    setCarregandoGrupos(false);
+  }, []);
 
   const handleNomeChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNome(event.target.value);
@@ -34,6 +48,10 @@ const Cadastro = (): ReactElement => {
 
   const handleConfSenhaChange = (event: ChangeEvent<HTMLInputElement>) => {
     setConfSenha(event.target.value);
+  };
+
+  const handleGrupoChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setGrupo(event.target.value);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -82,6 +100,17 @@ const Cadastro = (): ReactElement => {
             <Form.Group className="mb-3" controlId="formEmailCadastro">
               <Form.Label className="text-white">Email</Form.Label>
               <Form.Control onChange={handleEmailChange} value={email} type="email" placeholder="Digite seu email" required />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formGrupoCadastro">
+              <Form.Label className="text-white">Grupo de Usuário</Form.Label>
+              <Form.Select value={grupo} onChange={handleGrupoChange} required disabled={carregandoGrupos || grupos.length === 0}>
+                {carregandoGrupos && <option>Carregando grupos...</option>}
+                {!carregandoGrupos && grupos.length === 0 && <option>Nenhum grupo disponível</option>}
+                {!carregandoGrupos && grupos.map(g => (
+                  <option key={g.id} value={g.id}>{g.nome}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formPasswordCadastro">
