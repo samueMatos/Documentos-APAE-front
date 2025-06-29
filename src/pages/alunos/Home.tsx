@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactElement, useEffect, useState } from "react";
+import {ChangeEvent, ReactElement, useEffect, useRef, useState} from "react";
 import { Button, Container, Form, Spinner, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +14,7 @@ import {Page} from "../../models/Page.ts";
 
 const Home = (): ReactElement => {
     const navigate = useNavigate();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [paginaData, setPaginaData] = useState<Page<Aluno> | null>(null);
     const [alunoSelecionado, setAlunoSelecionado] = useState<number | null>(null);
     const [paginaAtual, setPaginaAtual] = useState(0);
@@ -28,8 +29,10 @@ const Home = (): ReactElement => {
             try {
                 const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca);
                 setPaginaData(resposta);
-            } catch (err) {
+            } catch (err: any) {
                 setErro(true);
+                const mensagemErro = err.response?.data || "Erro ao importar alunos.";
+                alert(mensagemErro);
                 console.error("Erro ao buscar alunos:", err);
             } finally {
                 setCarregando(false);
@@ -47,6 +50,33 @@ const Home = (): ReactElement => {
     const handleBuscar = (e: ChangeEvent<HTMLInputElement>) => {
         setTermoBusca(e.target.value);
         setPaginaAtual(0);
+    };
+
+    const handleBotaoImportar = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const arquivoExcel = files[0];
+            try {
+                await alunoService.importarAlunos(arquivoExcel);
+                alert("Alunos importados com sucesso!");
+
+                const currentTerm = termoBusca;
+                setTermoBusca(currentTerm + ' ');
+                setTermoBusca(currentTerm);
+            } catch (err) {
+                alert("Erro ao importar alunos. Verifique o console para detalhes.");
+                console.error("Erro na importação:", err);
+            } finally {
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+
+            }
+        }
     };
 
     const handleSelecionarAluno = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +119,14 @@ const Home = (): ReactElement => {
                     />
                 </div>
                 <div className="d-flex gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                        accept=".xls, .xlsx, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    />
+                    <Botao variant="secondary" icone={<Icone nome="arrow-down" />} onClick={handleBotaoImportar} texto="Importar Planilha" />
                     <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={() => navigate("/alunos/cadastrar")} texto="Cadastrar" />
                     <Botao variant="primary" icone={<Icone nome="pencil" />} onClick={() => navigate(`/alunos/editar/${alunoSelecionado}`)} disabled={!alunoSelecionado} texto="Editar" />
                     <Botao variant="primary" icone={<Icone nome="trash" />} onClick={handleInativarAluno} disabled={!alunoSelecionado} texto="Excluir" />

@@ -7,6 +7,15 @@ const cadastrarAluno = async (aluno: Aluno) => {
     return response.data;
 };
 
+const importarAlunos = async (Arquivo: File) => {
+    const formData = new FormData();
+    formData.append('file', Arquivo);
+
+    const response = await api.post('/alunos/importar', formData);
+    return response.data;
+}
+
+
 const listarAlunos = async (pagina: number, termoBusca?: string): Promise<Page<Aluno>> => {
     const params = new URLSearchParams();
     params.append('page', pagina.toString());
@@ -34,4 +43,4 @@ const deletarAluno = async (id: number) => {
     return response.data;
 }
 
-export const alunoService = {cadastrarAluno, listarAlunos, listarUmAluno, atualizarAluno, deletarAluno};
+export const alunoService = {cadastrarAluno, importarAlunos, listarAlunos, listarUmAluno, atualizarAluno, deletarAluno};

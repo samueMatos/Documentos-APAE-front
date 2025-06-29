@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import {ChangeEvent, ReactElement, useEffect, useState} from "react";
 import { Col, Container, Form, InputGroupProps, Row, Spinner } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
@@ -76,7 +76,7 @@ const Aluno = (): ReactElement => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     console.log(`Campo alterado: ${name}, Valor: ${value}`)
     setFormData({
@@ -192,7 +192,7 @@ const Aluno = (): ReactElement => {
 
             <Form.Group controlId="deficiencia" as={Col}>
               <Form.Label>Deficiência</Form.Label>
-              <Form.Control type="data" name="deficiencia" value={formData.deficiencia} onChange={handleChange} placeholder="Digite a deficiência" />
+              <Form.Control type="data" name="deficiencia" value={formData.deficiencia} onChange={handleChange} placeholder="Selecione o laudo" />
             </Form.Group>
 
             <Form.Group controlId="observacoes" as={Col}>
