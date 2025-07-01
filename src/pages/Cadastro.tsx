@@ -1,17 +1,18 @@
 import { ChangeEvent, FormEvent, ReactElement, useEffect, useState } from "react";
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../services/api";
 
 interface CadastroData {
   nome: string;
   email: string;
-  senha?: string;
+  password: string;
+  grupo: string;
 }
-const servicoCadastro = async (data: CadastroData) => {
-  console.log("Dados para cadastro no backend:", data);
-  return new Promise(resolve => setTimeout(() => resolve({ message: "Usuário cadastrado" }), 1000));
-};
 
+const servicoCadastro = async (data: CadastroData) => {
+  return api.post("/user/register", data);
+};
 
 const Cadastro = (): ReactElement => {
   const [nome, setNome] = useState<string>("");
@@ -24,15 +25,17 @@ const Cadastro = (): ReactElement => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Quando a API estiver pronta:
-    // api.get("/grupos")
-    //   .then(res => setGrupos(res.data))
-    //   .catch(() => setGrupos([]))
-    //   .finally(() => setCarregandoGrupos(false));
-
-    // Por enquanto, apenas marque como carregado e sem grupos
-    setCarregandoGrupos(false);
-  }, []);
+    api.get("/user/group")
+      .then((res: { data: string[] }) => {
+        const gruposFormatados = res.data.map((nome, idx) => ({
+          id: String(idx + 1),
+          nome
+        }));
+        setGrupos(gruposFormatados);
+      })
+      .catch(() => setGrupos([]))
+      .finally(() => setCarregandoGrupos(false));
+}, []);
 
   const handleNomeChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNome(event.target.value);
@@ -62,12 +65,16 @@ const Cadastro = (): ReactElement => {
       return;
     }
 
-    console.info("Nome:", nome);
-    console.info("Email:", email);
+    if (!grupo) {
+      alert("Selecione um grupo de usuário!");
+      return;
+    }
+
+    const dados = { nome, email, password: senha, groupId: grupo };
+    console.log("Enviando para cadastro:", dados);
 
     try {
-      await servicoCadastro({ nome, email, senha });
-
+      await servicoCadastro(dados);
       alert("Cadastrado com sucesso!");
       navigate("/entrar");
     } catch (error) {
@@ -125,9 +132,6 @@ const Cadastro = (): ReactElement => {
 
             <Button variant="primary" type="submit" className="w-100 btn-white">Criar conta</Button>
             <hr className="text-white"/>
-            <Button variant="outline-light" className="w-100" onClick={() => navigate("/entrar")}>
-              Já tenho conta (Entrar)
-            </Button>
           </Form>
         </Col>
       </Row>

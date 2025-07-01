@@ -82,10 +82,6 @@ const Login = (): ReactElement => {
             <Button variant="primary" type="submit" className="w-100 btn-white">Entrar</Button>
 
             <hr/>
-
-             <Link to="/cadastro" className="btn btn-outline-light w-100">
-              Criar conta
-            </Link>
           </Form>
         </Col>
       </Row>

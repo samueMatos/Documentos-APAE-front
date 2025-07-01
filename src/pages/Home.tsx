@@ -14,6 +14,7 @@ const Home = (): ReactElement => (
   <>
     <Card titulo="Documentos" icone={<i className="fa-solid fa-folder-open icones"></i>} link="documentos"></Card>
     <Card titulo="Alunos" icone={<i className="fa-solid fa-address-book icones"></i>} link="alunos"></Card>
+    <Card titulo="Cadastro" icone={<i className="fa-solid fa-user-plus icones"></i>} link="cadastro"></Card>
   </>
 );
 
