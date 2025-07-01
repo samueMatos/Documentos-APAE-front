@@ -8,11 +8,10 @@ interface Aluno {
     nome: string;
     dataNascimento: string;
     cpf: string;
-    cpfResponsavel: string;
     isAtivo?: boolean;
     telefone: string;
     sexo: string;
-    deficiencia: string;
+    deficiencia: File;
     dataEntrada?: string;
     observacoes: string;
     endereco: string;
@@ -23,6 +22,7 @@ interface Aluno {
     numero: number;
     complemento: string;
     cep: string;
+    ibge: string;
 }
 
 export default Aluno;

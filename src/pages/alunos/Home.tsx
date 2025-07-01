@@ -1,98 +1,138 @@
-import { ChangeEvent, ReactElement, useEffect, useState } from "react";
-import { Container, Form, Spinner, Table } from "react-bootstrap";
+import {ChangeEvent, ReactElement, useEffect, useRef, useState} from "react";
+import { Button, Container, Form, Spinner, Table } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
+import Aluno from "../../models/Aluno";
+import { alunoService } from "../../services/alunoService";
+
 import Icone from "../../components/common/Icone";
 import Botao from "../../components/common/Botao";
-import api from "../../services/api";
-import Aluno from "../../models/Aluno";
 import formatarCPF from "../../helpers/formatarCPF";
 import formatarData from "../../helpers/formatarData";
 import "../../assets/css/pages/aluno.css";
-import { useNavigate } from "react-router-dom";
+import {Page} from "../../models/Page.ts";
 
-/**
- * @description Pág dos Alunos.
- * @author Lucas Ronchi <@lucas0headshot>, Manuella <@manuela.sventnickas>, Leonardo <@ctrl-Leonardo> & Gabriel Zomer <@Carrerogabriel>
- * @since 25/11/2024
- */
 const Home = (): ReactElement => {
     const navigate = useNavigate();
-    const [alunos, setAlunos] = useState<Aluno[]>([]);
-    const [alunosFiltrados, setAlunosFiltrados] = useState<Aluno[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [paginaData, setPaginaData] = useState<Page<Aluno> | null>(null);
     const [alunoSelecionado, setAlunoSelecionado] = useState<number | null>(null);
-
+    const [paginaAtual, setPaginaAtual] = useState(0);
     const [termoBusca, setTermoBusca] = useState<string>('');
-    const [carregando, setCarregando] = useState<boolean>(false);
+    const [carregando, setCarregando] = useState<boolean>(true);
     const [erro, setErro] = useState<boolean>(false);
 
+    useEffect(() => {
+        const buscarDados = async () => {
+            setCarregando(true);
+            setErro(false);
+            try {
+                const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca);
+                setPaginaData(resposta);
+            } catch (err: any) {
+                setErro(true);
+                const mensagemErro = err.response?.data || "Erro ao importar alunos.";
+                alert(mensagemErro);
+                console.error("Erro ao buscar alunos:", err);
+            } finally {
+                setCarregando(false);
+            }
+        };
+
+        const timerId = setTimeout(() => {
+            buscarDados();
+        }, 300);
+
+        return () => clearTimeout(timerId);
+
+    }, [paginaAtual, termoBusca]);
+
     const handleBuscar = (e: ChangeEvent<HTMLInputElement>) => {
-        setTermoBusca(e.target.value.toLowerCase());
-        setAlunosFiltrados(alunos.filter(aluno =>
-            aluno.nome.toLowerCase().includes(termoBusca) ||
-            aluno.cpf.includes(termoBusca)
-        ));
+        setTermoBusca(e.target.value);
+        setPaginaAtual(0);
     };
 
-    const handleCadastrarAluno = () => {
-        navigate("/alunos/cadastrar");
+    const handleBotaoImportar = () => {
+        fileInputRef.current?.click();
     };
 
-    const handleEditarAluno = () => {
-        if (!alunoSelecionado)
-            throw new Error("handleEditarAluno: nenhum aluno selecionado");
+    const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const arquivoExcel = files[0];
+            try {
+                await alunoService.importarAlunos(arquivoExcel);
+                alert("Alunos importados com sucesso!");
 
-        navigate(`/alunos/editar/${alunoSelecionado}`);
+                const currentTerm = termoBusca;
+                setTermoBusca(currentTerm + ' ');
+                setTermoBusca(currentTerm);
+            } catch (err) {
+                alert("Erro ao importar alunos. Verifique o console para detalhes.");
+                console.error("Erro na importação:", err);
+            } finally {
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+
+            }
+        }
     };
 
     const handleSelecionarAluno = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setAlunoSelecionado(Number(e.target.value));
+        const idSelecionado = Number(e.target.value);
+        setAlunoSelecionado((prevId) => (prevId === idSelecionado ? null : idSelecionado));
     };
 
-    const buscarDados = async () => {
-        setCarregando(true);
-
-        try {
-            const resposta = await api.get<{ content: Aluno[] }>('/alunos/all');
-            setAlunos(resposta.data || []);
-            setAlunosFiltrados(resposta.data || []);
-        } catch (err) {
-            setErro(true);
-            console.error("Erro ao buscar alunos:", err);
-        } finally {
-            setCarregando(false);
-        }
+    const handleDeselecionar = () => {
+        setAlunoSelecionado(null);
     };
 
     const handleInativarAluno = async () => {
-        if (!alunoSelecionado)
-            throw new Error("handleInativarAluno: nenhum aluno selecionado");
+        if (!alunoSelecionado) return;
 
         if (window.confirm("Deseja realmente excluir o aluno?")) {
-            const response = await api.delete(`/alunos/${alunoSelecionado}`);
-
-            if (response.status === 200) {
+            try {
+                await alunoService.deletarAluno(alunoSelecionado);
                 alert("Aluno excluído com sucesso!");
-                buscarDados();
-            } else
+                const currentTerm = termoBusca;
+                setTermoBusca(currentTerm + ' ');
+                setTermoBusca(currentTerm);
+                setAlunoSelecionado(null);
+            } catch (err) {
                 alert("Erro ao excluir aluno!");
+                console.error(err);
+            }
         }
     };
-
-    useEffect(() => {
-        buscarDados();
-    }, []);
-
     return (
         <Container fluid>
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <div className="">
+                <div>
                     <h2 className="text-primary">Alunos</h2>
-                    <Form.Control type="text" placeholder="Pesquisar..." value={termoBusca} onChange={handleBuscar} className="border border-primary rounded-1" />
+                    <Form.Control
+                        type="text"
+                        placeholder="Pesquisar por nome"
+                        value={termoBusca}
+                        onChange={handleBuscar}
+                        className="border border-primary rounded-1"
+                    />
                 </div>
-
                 <div className="d-flex gap-2">
-                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={handleCadastrarAluno}  texto="Cadastrar" />
-                    <Botao variant="primary" icone={<Icone nome="pencil" />} onClick={handleEditarAluno} disabled={!alunoSelecionado}  texto="Editar" />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                        accept=".xls, .xlsx, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    />
+                    <Botao variant="secondary" icone={<Icone nome="arrow-down" />} onClick={handleBotaoImportar} texto="Importar Planilha" />
+                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={() => navigate("/alunos/cadastrar")} texto="Cadastrar" />
+                    <Botao variant="primary" icone={<Icone nome="pencil" />} onClick={() => navigate(`/alunos/editar/${alunoSelecionado}`)} disabled={!alunoSelecionado} texto="Editar" />
                     <Botao variant="primary" icone={<Icone nome="trash" />} onClick={handleInativarAluno} disabled={!alunoSelecionado} texto="Excluir" />
+                    {alunoSelecionado && (
+                        <Botao variant="secondary" icone={<Icone nome="x-circle" />} onClick={handleDeselecionar} texto="Limpar Seleção" />
+                    )}
                 </div>
             </div>
 
@@ -101,42 +141,52 @@ const Home = (): ReactElement => {
                     <Spinner animation="border" />
                 </div>
             ) : (
-                <Table borderless={true} hover responsive>
-                    <thead className="">
+                <>
+                    <Table borderless={true} hover responsive>
+                        <thead>
                         <tr className="thead-azul">
                             <th></th>
                             <th>Nome</th>
                             <th>CPF</th>
                             <th>Data de Nascimento</th>
-                            <th>Responsável Legal</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         {erro ? (
                             <tr className="border border-primary">
-                                <td colSpan={5} className="text-center">Erro ao buscar alunos...</td>
+                                <td colSpan={4} className="text-center text-danger">Erro ao buscar alunos. Tente novamente.</td>
                             </tr>
-                        ) : (
-                            alunosFiltrados.length === 0 ? (
-                                <tr className="border border-primary">
-                                    <td colSpan={5} className="text-center">Nenhum aluno encontrado...</td>
+                        ) : paginaData?.content && paginaData.content.length > 0 ? (
+                            paginaData.content.map(aluno => (
+                                <tr key={aluno.id} className="border border-primary tr-azul">
+                                    <td>
+                                        <Form.Check type="radio" name="alunoSelecionado" checked={alunoSelecionado === aluno.id} value={aluno.id} onChange={handleSelecionarAluno} />
+                                    </td>
+                                    <td>{aluno.nome}</td>
+                                    <td>{formatarCPF(aluno.cpf)}</td>
+                                    <td>{formatarData(aluno.dataNascimento)}</td>
                                 </tr>
-                            )   :
-                                    alunosFiltrados.map(aluno => (
-                                        <tr key={aluno.id} className="border border-primary tr-azul">
-                                            <td>
-                                                <Form.Check type="radio" name="alunoSelecionado" checked={alunoSelecionado === aluno.id} value={aluno.id} onChange={handleSelecionarAluno} />
-                                            </td>
-                                            <td>{aluno.nome}</td>
-                                            <td>{formatarCPF(aluno.cpf)}</td>
-                                            <td>{formatarData(aluno.dataNascimento)}</td>
-                                            <td>{formatarCPF(aluno.cpfResponsavel)}</td>
-                                        </tr>
-                                    ))
-                            )
-                        }
-                    </tbody>
-                </Table>
+                            ))
+                        ) : (
+                            <tr className="border border-primary">
+                                <td colSpan={4} className="text-center">Nenhum aluno encontrado.</td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </Table>
+
+                    <div className="d-flex justify-content-center align-items-center gap-2">
+                        <Button variant="primary" onClick={() => setPaginaAtual(p => p - 1)} disabled={paginaData?.first}>
+                            &larr; Anterior
+                        </Button>
+                        <span>
+                            Página {paginaData ? paginaData.number + 1 : 0} de {paginaData?.totalPages ?? 0}
+                        </span>
+                        <Button variant="primary" onClick={() => setPaginaAtual(p => p + 1)} disabled={paginaData?.last}>
+                            Próxima &rarr;
+                        </Button>
+                    </div>
+                </>
             )}
         </Container>
     );
