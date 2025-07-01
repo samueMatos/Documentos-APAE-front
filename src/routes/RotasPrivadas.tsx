@@ -7,6 +7,9 @@ import DocumentosPage from "../pages/documentos/DocumentosPage";
 import DocumentosCadastro from "../pages/documentos/DocumentosCadastro";
 import Aluno from "../pages/alunos/Aluno";
 import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
+import GroupListPage from "../pages/group/GroupListPage";
+import GroupCreatePage from "../pages/group/GroupCreatePage";
+import GroupEditPage from "../pages/group/GroupEditPage";
 
 /**
  * @description Rotas privadas da App.
@@ -17,9 +20,10 @@ import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
 const RotasPrivadas = (): ReactElement => (
     <Routes>
         <Route path="/" element={<Layout />}>
+       
             <Route index element={<Home />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-
+            
+            
             <Route path="alunos">
                 <Route index element={<HomeAlunos />} />
                 <Route path="cadastrar" element={<Aluno />} />
@@ -27,10 +31,27 @@ const RotasPrivadas = (): ReactElement => (
                 <Route path="*" element={<Navigate to="/alunos" replace />} />
             </Route>
 
+        
             <Route path="documentos" element={<DocumentosPage />} />
             <Route path="/cadastrar" element={<DocumentosCadastro />} />
-
+            
+        
             <Route path="usuario" element={<DetalhesUsuario />} />
+
+           
+            <Route path="admin/grupos">
+             
+                <Route index element={<GroupListPage />} />
+            
+                <Route path="novo" element={<GroupCreatePage />} />
+              
+                <Route path="editar/:id" element={<GroupEditPage />} />
+              
+                <Route path="*" element={<Navigate to="/admin/grupos" replace />} />
+            </Route>
+
+          
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
     </Routes>
 );

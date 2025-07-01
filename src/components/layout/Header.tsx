@@ -40,6 +40,7 @@ const Header = (): ReactElement => {
                         <Nav className="me-auto">
                             <Nav.Link onClick={() => handleNavigate("alunos")} className="AMARELO"><Icone nome="address-book" texto="ALUNOS" /></Nav.Link>
                             <Nav.Link onClick={() => handleNavigate("documentos")} className="AMARELO"><Icone nome="folder-open" texto="DOCUMENTOS" /></Nav.Link>
+                            <Nav.Link onClick={() => handleNavigate("/admin/grupos")} className="AMARELO"><Icone nome="folder-open" texto="GRUPOS DE USUÁRIOS" /></Nav.Link>
                             <Nav.Link href="#" onClick={handleSair} className="AMARELO"><Icone nome="sign-out" texto="SAIR" /></Nav.Link>
                         </Nav>
                     </Offcanvas.Body>
