@@ -15,7 +15,6 @@ const FormTipoDocumento = (): ReactElement => {
         if (id) {
             setCarregando(true);
             api.get<TipoDocumentoResponse>(`/tipo-documento/${id}`)
-                // CORREÇÃO: Descrevemos a "forma" da resposta diretamente aqui.
                 .then((response: { data: TipoDocumentoResponse }) => {
                     const { nome, validade } = response.data;
                     const dataFormatada = validade ? validade.split('T')[0] : '';
@@ -45,11 +44,11 @@ const FormTipoDocumento = (): ReactElement => {
 
         try {
             if (id) {
-                // Envia o payload formatado para a API
+
                 await api.put(`/tipo-documento/${id}`, payload);
                 alert("Tipo de documento atualizado com sucesso!");
             } else {
-                // Envia o payload formatado para a API
+
                 await api.post('/tipo-documento', payload);
                 alert("Tipo de documento criado com sucesso!");
             }

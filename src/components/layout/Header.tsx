@@ -109,7 +109,7 @@ const Header = (): ReactElement => {
                             <Nav className="me-auto">
                                 <Nav.Link onClick={() => handleNavigate("alunos")} className="AMARELO"><Icone nome="address-book" texto="ALUNOS" /></Nav.Link>
                                 <Nav.Link onClick={() => handleNavigate("documentos")} className="AMARELO"><Icone nome="folder-open" texto="DOCUMENTOS" /></Nav.Link>
-                                
+                                <Nav.Link onClick={() => handleNavigate("admin/grupos")} className="AMARELO"><Icone nome="folder-open" texto="GRUPO DE USUÁRIO" /></Nav.Link>
                                 {/* NOVO LINK/BOTÃO PARA ALTERAR SENHA */}
                                 <Nav.Link onClick={handleShowPasswordModal} className="AMARELO"><Icone nome="key" texto="ALTERAR SENHA" /></Nav.Link>
                                 {/* Você pode escolher outro ícone como "lock" ou "shield-alt" */}

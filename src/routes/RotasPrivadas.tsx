@@ -10,6 +10,8 @@ import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
 import GroupListPage from "../pages/group/GroupListPage";
 import GroupCreatePage from "../pages/group/GroupCreatePage";
 import GroupEditPage from "../pages/group/GroupEditPage";
+import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
+import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
 
 /**
  * @description Rotas privadas da App.
@@ -31,11 +33,11 @@ const RotasPrivadas = (): ReactElement => (
                 <Route path="*" element={<Navigate to="/alunos" replace />} />
             </Route>
 
-            {/* Adicione este bloco de rotas */}
+
             <Route path="tipo-documento">
-                <Route index element={<HomeTipoDocumento />} />
-                <Route path="novo" element={<FormTipoDocumento />} />
-                <Route path="editar/:id" element={<FormTipoDocumento />} />
+                <Route index element={<HomeTipoDocumento/>} />
+                <Route path="novo" element={<FormTipoDocumento/>} />
+                <Route path="editar/:id" element={<FormTipoDocumento/>} />
                 <Route path="*" element={<Navigate to="/tipo-documento" replace />} />
             </Route>
 
