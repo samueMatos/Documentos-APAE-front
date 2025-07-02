@@ -28,7 +28,7 @@ const Home = (): ReactElement => (
         )}
 
         {hasAnyPermission(['GERENCIAR_USUARIO']) && (
-            <Card titulo="Cadastro" icone={<i className="fa-solid fa-user-plus icones"></i>} link="cadastrar" />
+            <Card titulo="Cadastro" icone={<i className="fa-solid fa-user-plus icones"></i>} link="cadastro" />
         )}
 
         {hasAnyPermission(['GRUPOS_PERMISSOES']) && (

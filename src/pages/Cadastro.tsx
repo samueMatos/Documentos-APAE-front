@@ -92,7 +92,17 @@ const Cadastro = (): ReactElement => {
           <Image src="/img/mapa.png" alt="Mapa do Brasil" className="mapa" />
           <h1 className="fs-1 text-blue">APAE CRICIÚMA</h1>
         </Col>
- 
+             <Link
+            to="/"
+            className="position-absolute top-0 start-0 m-3 d-flex align-items-center justify-content-center bg-primary text-white rounded-pill shadow-sm text-decoration-none"
+            style={{ width: '45px', height: '45px' }} 
+            title="Voltar para a página inicial"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" >
+              <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+            </svg>
+          </Link>
+          
         <Col md={4} className="d-flex vh-100 flex-column justify-content-center align-items-center bg-blue p-0">
           <Form onSubmit={handleSubmit} className="w-75">
             <div className="logo-wrapper text-center mb-4">
