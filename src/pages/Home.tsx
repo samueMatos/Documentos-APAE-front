@@ -32,7 +32,7 @@ const Home = (): ReactElement => (
         )}
 
         {hasAnyPermission(['GRUPOS_PERMISSOES']) && (
-            <Card titulo="Grupo de Usuário" icone={<i className="fa-solid fa-users-cog icones"></i>} link="/admin/grupos" />
+            <Card titulo="Grupo de Usuário" icone={<i className="fa-solid fa-users-cog icones"></i>} link="admin/grupos" />
         )}
     </>
 );

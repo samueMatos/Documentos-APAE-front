@@ -79,10 +79,10 @@ const FormTipoDocumento = (): ReactElement => {
 
         try {
             if (id) {
-                await api.put(`/api/tipo-documento/${id}`, payload);
+                await api.put(`/tipo-documento/${id}`, payload);
                 alert("Tipo de documento atualizado com sucesso!");
             } else {
-                await api.post('/api/tipo-documento', payload);
+                await api.post('/tipo-documento', payload);
                 alert("Tipo de documento criado com sucesso!");
             }
             navigate("/tipo-documento");
