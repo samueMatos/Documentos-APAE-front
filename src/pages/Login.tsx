@@ -9,8 +9,9 @@ interface User {
   password: string
 }
 
-interface Response {
-  token: string
+interface LoginApiResponse {
+  token: string;
+  permissions: string[];
 }
 
 /**
@@ -32,24 +33,27 @@ const Login = (): ReactElement => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.info("Email:", email);
-    console.info("Senha:", senha);
 
-    const user: User = {
+    const userPayload: User = {
       email: email,
       password: senha
     }
 
-    const response = await api.post<Response>('/user/login', user)
+    try {
+      
+        const response = await api.post<LoginApiResponse>('/user/login', userPayload);
 
-    console.log(response.data);
+        const { token, permissions } = response.data;
 
-    const { token } = response.data;
+        login(token, permissions);
 
-    login(token);
-
-    alert("Logado com sucesso!");
-    window.location.assign("/home")
+        alert("Logado com sucesso!");
+  
+        window.location.href = "/"; 
+    } catch (error) {
+        console.error("Falha no login:", error);
+        alert("Erro ao fazer login. Verifique suas credenciais.");
+    }
   };
 
   return (
@@ -70,13 +74,13 @@ const Login = (): ReactElement => {
 
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>
-              <Form.Control onChange={handleEmailChange} type="email" placeholder="Digite seu email" />
+              <Form.Control onChange={handleEmailChange} type="email" placeholder="Digite seu email" required/>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formPassword">
               <Form.Label>Senha</Form.Label>
-              <Form.Control type="password" onChange={handleSenhaChange} placeholder="Digite sua senha" />
-              <CardLink href="/esqueci-senha" className="text-white link-underline-opacity-0">Esqueceu a senha?</CardLink>
+              <Form.Control type="password" onChange={handleSenhaChange} placeholder="Digite sua senha" required/>
+              <CardLink as={Link} to="/esqueci-senha" className="text-white link-underline-opacity-0">Esqueceu a senha?</CardLink>
             </Form.Group>
 
             <Button variant="primary" type="submit" className="w-100 btn-white">Entrar</Button>

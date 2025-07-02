@@ -12,6 +12,8 @@ import GroupCreatePage from "../pages/group/GroupCreatePage";
 import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
+import ProtectedRoute from "./ProtectedRoute";
+import Cadastro from "../pages/Cadastro";
 
 /**
  * @description Rotas privadas da App.
@@ -22,45 +24,47 @@ import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
 const RotasPrivadas = (): ReactElement => (
     <Routes>
         <Route path="/" element={<Layout />}>
-       
             <Route index element={<Home />} />
             
-            
-            <Route path="alunos">
-                <Route index element={<HomeAlunos />} />
-                <Route path="cadastrar" element={<Aluno />} />
-                <Route path="editar/:id" element={<Aluno />} />
-                <Route path="*" element={<Navigate to="/alunos" replace />} />
-            </Route>
-
-
-            <Route path="tipo-documento">
-                <Route index element={<HomeTipoDocumento/>} />
-                <Route path="novo" element={<FormTipoDocumento/>} />
-                <Route path="editar/:id" element={<FormTipoDocumento/>} />
-                <Route path="*" element={<Navigate to="/tipo-documento" replace />} />
+            <Route element={<ProtectedRoute permission="ALUNOS" />}>
+                <Route path="alunos">
+                    <Route index element={<HomeAlunos />} />
+                    <Route path="cadastrar" element={<Aluno />} />
+                    <Route path="editar/:id" element={<Aluno />} />
+                    <Route path="*" element={<Navigate to="/alunos" replace />} />
+                </Route>
             </Route>
 
         
+            <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
+                <Route path="tipo-documento">
+                    <Route index element={<HomeTipoDocumento/>} />
+                    <Route path="novo" element={<FormTipoDocumento/>} />
+                    <Route path="editar/:id" element={<FormTipoDocumento/>} />
+                    <Route path="*" element={<Navigate to="/tipo-documento" replace />} />
+                </Route>
+            </Route>
+            
+            <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
             <Route path="documentos" element={<DocumentosPage />} />
-            <Route path="/cadastrar" element={<DocumentosCadastro />} />
-            
-        
-            <Route path="usuario" element={<DetalhesUsuario />} />
-
-           
-            <Route path="admin/grupos">
-             
-                <Route index element={<GroupListPage />} />
-            
-                <Route path="novo" element={<GroupCreatePage />} />
-              
-                <Route path="editar/:id" element={<GroupEditPage />} />
-              
-                <Route path="*" element={<Navigate to="/admin/grupos" replace />} />
+            <Route path="cadastrar" element={<DocumentosCadastro />} />
             </Route>
 
-          
+
+            <Route element={<ProtectedRoute permission="GERENCIAR_USUARIO" />}>
+            <Route path="usuario" element={<DetalhesUsuario />} />
+            <Route path="cadastro" element={<Cadastro />} />
+            </Route>
+
+            <Route element={<ProtectedRoute permission="GRUPOS_PERMISSOES" />}>
+                <Route path="admin/grupos">
+                    <Route index element={<GroupListPage />} />
+                    <Route path="novo" element={<GroupCreatePage />} />
+                    <Route path="editar/:id" element={<GroupEditPage />} />
+                    <Route path="*" element={<Navigate to="/admin/grupos" replace />} />
+                </Route>
+            </Route>
+            
             <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
     </Routes>
