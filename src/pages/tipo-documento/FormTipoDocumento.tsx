@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from "react";
-import { Container, Form, Spinner, Alert, Button, InputGroup } from "react-bootstrap";
+import { Container, Form, Spinner, Alert, Button, InputGroup, Row, Col } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { TipoDocumentoRequest, TipoDocumentoResponse, UnidadeTempo } from "../../models/TipoDocumento";
@@ -45,7 +45,7 @@ const FormTipoDocumento = (): ReactElement => {
     const fetchData = async () => {
         setCarregando(true);
         try {
-            const response = await api.get<TipoDocumentoResponse>(`/api/tipo-documento/${id}`);
+            const response = await api.get<TipoDocumentoResponse>(`/tipo-documento/${id}`);
             console.log(response.data);
             const { nome, validade } = response.data;
             const { valor, unidade } = decomporDias(validade);
@@ -102,7 +102,7 @@ const FormTipoDocumento = (): ReactElement => {
                 <Form onSubmit={handleSubmit}>
                     {erro && <Alert variant="danger">{erro}</Alert>}
                     
-                    <Form.Group className="mb-3" controlId="nome">
+                    <Form.Group as={Col} md="6" className="mb-3" controlId="nome">
                         <Form.Label>Nome</Form.Label>
                         <Form.Control
                             type="text"
@@ -114,7 +114,7 @@ const FormTipoDocumento = (): ReactElement => {
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="validade">
+                    <Form.Group as={Col} md="4" className="mb-4" controlId="validade">
                         <Form.Label>Prazo de Validade</Form.Label>
                         <InputGroup>
                             <Form.Control

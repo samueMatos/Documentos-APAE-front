@@ -69,7 +69,7 @@ const HomeTipoDocumento = (): ReactElement => {
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
-                            <th>Validade</th>
+                            <th>Vigência</th>
                             <th>Data de Registro</th>
                             <th>Ações</th>
                         </tr>

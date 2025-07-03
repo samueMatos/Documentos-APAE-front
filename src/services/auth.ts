@@ -1,5 +1,6 @@
 export const TOKEN_KEY: string = "@ged-apae-token";
 const PERMISSIONS_KEY: string = "@ged-apae-permissions";
+import { jwtDecode } from "jwt-decode";
 
 
 /**
@@ -11,7 +12,27 @@ export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 /**
  * @description Retorna se o usuário está autenticado (se o token existe).
  */
-export const estaAutenticado = (): boolean => getToken() !== null;
+export const estaAutenticado = (): boolean => {
+    const token = getToken();
+    if (!token) {
+        return false;
+    }
+
+    try {
+        const decodedToken: { exp: number } = jwtDecode(token);
+        // O campo 'exp' é em segundos, então multiplicamos por 1000 para comparar com milissegundos
+        if (decodedToken.exp * 1000 < Date.now()) {
+            logout(); // Limpa o token expirado
+            return false;
+        }
+    } catch (e) {
+        console.error("Erro ao decodificar o token:", e);
+        logout(); // Limpa token inválido
+        return false;
+    }
+
+    return true;
+};
 
 
 /**

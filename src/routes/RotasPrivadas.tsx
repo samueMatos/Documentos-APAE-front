@@ -36,7 +36,7 @@ const RotasPrivadas = (): ReactElement => (
             </Route>
 
         
-            <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
+            <Route element={<ProtectedRoute permission="TIPO_DOCUMENTO" />}>
                 <Route path="tipo-documento">
                     <Route index element={<HomeTipoDocumento/>} />
                     <Route path="novo" element={<FormTipoDocumento/>} />

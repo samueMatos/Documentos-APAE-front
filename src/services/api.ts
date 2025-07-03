@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import { getToken, logout } from "./auth";
 
 /**
@@ -11,22 +11,29 @@ const api: AxiosInstance = axios.create({
     baseURL: "http://127.0.0.1:8080"
 });
 
-api.interceptors.request.use(async (config: AxiosRequestConfig): Promise<AxiosRequestConfig> => {
-    const token = getToken();
-    if (token)
-        config.headers.Authorization = `Bearer ${token}`;
+// Interceptor de Requisição
+api.interceptors.request.use(
+    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+        const token = getToken();
+        if (token) {
+            // Usa o método .set() para adicionar o cabeçalho de autorização
+            config.headers.set('Authorization', `Bearer ${token}`);
+        }
+        return config;
+    }
+);
 
-    return config;
-});
-
+// Interceptor de Resposta
 api.interceptors.response.use(
     (response: AxiosResponse) => {
-        if (response.status === 403) {
+        return response;
+    },
+    (error: AxiosError) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             logout();
             location.assign("/entrar");
         }
-
-        return response;
+        return Promise.reject(error);
     }
 );
 
