@@ -46,9 +46,9 @@ const FormTipoDocumento = (): ReactElement => {
         setCarregando(true);
         try {
             const response = await api.get<TipoDocumentoResponse>(`/api/tipo-documento/${id}`);
-            const { nome, validadeEmDias } = response.data;
-            const { valor, unidade } = decomporDias(validadeEmDias);
-
+            console.log(response.data);
+            const { nome, validade } = response.data;
+            const { valor, unidade } = decomporDias(validade);
             setNome(nome);
             setValorValidade(valor);
             setUnidadeValidade(unidade);
@@ -74,7 +74,7 @@ const FormTipoDocumento = (): ReactElement => {
 
         const payload: TipoDocumentoRequest = {
             nome: nome,
-            validadeEmDias: totalDias
+            validade: totalDias
         };
 
         try {

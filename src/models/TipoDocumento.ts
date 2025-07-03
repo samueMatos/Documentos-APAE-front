@@ -2,7 +2,7 @@ export type UnidadeTempo = 'Dias' | 'Meses' | 'Anos';
 
 export interface TipoDocumentoRequest {
     nome: string;
-    validadeEmDias: number;
+    validade: number;
   }
   
 export interface TipoDocumentoResponse {
@@ -12,5 +12,5 @@ export interface TipoDocumentoResponse {
     usuarioAlteracao: string | null;
     dataAlteracao: string | null; // Formato ISO 8601 (ex: "2025-06-21T22:30:00")
     dataRegistro: string | null; // Formato ISO 8601
-    validadeEmDias: number;
+    validade: number;
   }

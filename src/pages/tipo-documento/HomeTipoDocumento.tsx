@@ -3,7 +3,6 @@ import { Container, Spinner, Table, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { TipoDocumentoResponse } from "../../models/TipoDocumento";
-import formatarData from "../../helpers/formatarData";
 import formatarDataHora from "../../helpers/formatarDataHora";
 import Botao from "../../components/common/Botao";
 import Icone from "../../components/common/Icone";
@@ -70,7 +69,7 @@ const HomeTipoDocumento = (): ReactElement => {
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
-                            <th>Data de Validade</th>
+                            <th>Validade</th>
                             <th>Data de Registro</th>
                             <th>Ações</th>
                         </tr>
@@ -85,7 +84,7 @@ const HomeTipoDocumento = (): ReactElement => {
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
                                     <td>{item.nome}</td>
-                                    <td>{formatarData(item.validade)}</td>
+                                    <td>{item.validade} dias</td>
                                     <td>{formatarDataHora(item.dataRegistro)}</td>
                                     <td className="d-flex justify-content-center gap-2">
                                         <Botao variant="info" size="sm" icone={<Icone nome="pencil" />} onClick={() => navigate(`/tipo-documento/editar/${item.id}`)} texto="Editar" />
