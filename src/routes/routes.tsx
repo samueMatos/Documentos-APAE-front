@@ -6,12 +6,14 @@ import { estaAutenticado } from "../services/auth";
 import Cadastro from "../pages/Cadastro";
 import EsqueciSenha from "../pages/EsqueciSenha";
 import RedefinirSenha from "../pages/RedefinirSenha";
+import { AlertProvider } from "../contexts/AlertContext";
 
 const Rotas = (): ReactElement => {
   const autenticado = estaAutenticado();
 
   return (
     <BrowserRouter>
+    <AlertProvider>
       <Routes>
         {autenticado ? (
           <Route path="/*" element={<RotasPrivadas />} />
@@ -25,6 +27,7 @@ const Rotas = (): ReactElement => {
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="*" element={<Navigate to={autenticado ? "/" : "/entrar"} replace />} />
       </Routes>
+      </AlertProvider>
     </BrowserRouter>
   );
 };
