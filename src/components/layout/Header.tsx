@@ -1,25 +1,26 @@
-// src/components/layout/Header.tsx
-
 import { ReactElement, useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { Nav, Button, Modal, Form, Alert, Container, Navbar, Offcanvas, NavDropdown } from "react-bootstrap";
+import { Nav, Button, Modal, Form, Alert, Container, Navbar, NavDropdown } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import { logout, hasAnyPermission, getDecodedToken } from "../../services/auth";
 import api from "../../services/api";
 
-// --- Interfaces ---
+import ModalGenerico from "../modals/ModalGenerico";
+
 interface MensagemState {
     tipo: 'success' | 'danger' | null;
     texto: string;
 }
 
+
 interface NavLinkItem {
-  path: string;
-  text: string;
-  icon: string;
-  permissions: string[];
+    path?: string; 
+    text: string;
+    icon: string;
+    permissions: string[];
+    subItems?: NavLinkItem[];
 }
 
-// --- Componente Header Refatorado ---
+
 const Header = (): ReactElement => {
     const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
     const [senhaAtual, setSenhaAtual] = useState<string>("");
@@ -28,33 +29,50 @@ const Header = (): ReactElement => {
     const [mensagemSenha, setMensagemSenha] = useState<MensagemState>({ tipo: null, texto: "" });
     const [loadingSenha, setLoadingSenha] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("Usuário");
+    const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
 
     useEffect(() => {
         const tokenData = getDecodedToken();
         if (tokenData) {
-            // Usa o 'nome' se existir no token, senão, usa o 'sub' (email)
             setUserName(tokenData.nome || tokenData.sub);
         }
     }, []);
 
-    // Lista centralizada de links de navegação
+
     const navLinks: NavLinkItem[] = [
         { path: "/", text: "Início", icon: "fa-solid fa-house", permissions: ["ALUNOS", "DOCUMENTOS", "TIPO_DOCUMENTO", "GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"] },
         { path: "/alunos", text: "Alunos", icon: "fa-solid fa-address-book", permissions: ["ALUNOS"] },
-        { path: "/documentos", text: "Documentos", icon: "fa-solid fa-folder-open", permissions: ["DOCUMENTOS"] },
-        { path: "/tipo-documento", text: "Tipos de Documento", icon: "fa-solid fa-file-alt", permissions: ["TIPO_DOCUMENTO"] },
-        { path: "/admin/grupos", text: "Grupos de Usuários", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
-        { path: "/cadastro", text: "Cadastrar Usuário", icon: "fa-solid fa-user-plus", permissions: ["GERENCIAR_USUARIO"] },
+        { 
+            text: "Documentos", 
+            icon: "fa-solid fa-folder-open", 
+            permissions: ["DOCUMENTOS", "TIPO_DOCUMENTO"],
+            subItems: [
+                { path: "/documentos", text: "Gerenciar Documentos", icon: "fa-solid fa-folder-open", permissions: ["DOCUMENTOS"] },
+                { path: "/tipo-documento", text: "Tipos de Documento", icon: "fa-solid fa-file-alt", permissions: ["TIPO_DOCUMENTO"] },
+            ]
+        },
+        { 
+            text: "Usuários", 
+            icon: "fa-solid fa-users", 
+            permissions: ["GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"],
+            subItems: [
+                { path: "/usuario/list", text: "Gerenciamento de Usuários", icon: "fas fa-user-cog", permissions: ["GERENCIAR_USUARIO"] },
+                { path: "/admin/grupos", text: "Grupos de Usuários", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
+                { path: "/cadastro", text: "Cadastrar Usuário", icon: "fa-solid fa-user-plus", permissions: ["GERENCIAR_USUARIO"] },
+                
+            ]
+        },
     ];
     
-    // --- Handlers (sem alterações na lógica) ---
-    const handleSair = () => {
-        if (window.confirm("Deseja realmente sair?")) {
-            logout();
-            window.location.href = '/entrar';
-        }
+    const handleSairClick = () => {
+        setShowLogoutModal(true);
     };
 
+    const confirmLogout = () => {
+        logout();
+        window.location.href = '/entrar';
+    };
+    
     const handleShowPasswordModal = () => {
         setSenhaAtual("");
         setNovaSenha("");
@@ -90,29 +108,68 @@ const Header = (): ReactElement => {
         }
     };
 
+ 
+    const renderNavItems = () => navLinks.map((link) => {
+        if (!hasAnyPermission(link.permissions)) {
+            return null;
+        }
+
+      
+        if (link.subItems) {
+            return (
+                <NavDropdown
+                    title={<><i className={`${link.icon} me-2`}></i>{link.text}</>}
+                    id={`nav-dropdown-${link.text}`}
+                    key={link.text}
+                >
+                    {link.subItems.map(subItem =>
+                        hasAnyPermission(subItem.permissions) && (
+                            <LinkContainer to={subItem.path!} key={subItem.path}>
+                                <NavDropdown.Item>
+                                    <i className={`${subItem.icon} me-2 fa-fw`}></i>{subItem.text}
+                                </NavDropdown.Item>
+                            </LinkContainer>
+                        )
+                    )}
+                </NavDropdown>
+            );
+        }
+
+
+        return (
+            <LinkContainer to={link.path!} key={link.path}>
+                <Nav.Link>
+                    <i className={`${link.icon} me-2`}></i>{link.text}
+                </Nav.Link>
+            </LinkContainer>
+        );
+    });
+
     return (
         <>
-            <Navbar expand="lg" bg="primary" variant="dark" className="shadow-sm px-md-3" sticky="top">
+            <Navbar expand="lg" bg="primary" variant="dark" className="shadow-sm px-md-3 py-2" sticky="top">
                 <Container fluid>
                     <LinkContainer to="/">
                         <Navbar.Brand className="d-flex align-items-center">
-                            <img
-                                src="/img/logo.png"
-                                width="35"
-                                height="35"
-                                className="d-inline-block align-top me-2"
-                                alt="Logo da APAE"
-                            />
+                            <img src="/img/logo.png" width="45" height="45" className="d-inline-block align-top me-2" alt="Logo da APAE" />
                             <span className="d-none d-sm-inline">Gestão APAE</span>
                         </Navbar.Brand>
                     </LinkContainer>
-                    
+                  
+                    <Navbar.Toggle aria-controls="main-navbar-nav" />
+                    <Navbar.Collapse id="main-navbar-nav">
+                        <Nav className="me-auto">
+                            {renderNavItems()}
+                        </Nav>
+                    </Navbar.Collapse>
+
+                
                     <div className="ms-auto d-flex align-items-center">
                         <NavDropdown
                             title={
                                 <>
-                                    <i className="fa-solid fa-user-circle fa-lg text-white"></i>
-                                    <span className="d-none d-md-inline ms-2 text-white">{userName}</span>
+                                    <i className="fa-solid fa-user-circle fa-lg"></i>
+                                    <span className="d-none d-md-inline ms-2">{userName}</span>
                                 </>
                             }
                             id="user-profile-dropdown"
@@ -122,40 +179,14 @@ const Header = (): ReactElement => {
                                 <i className="fa-solid fa-key me-2"></i>Alterar Senha
                             </NavDropdown.Item>
                             <NavDropdown.Divider />
-                            <NavDropdown.Item onClick={handleSair} className="text-danger">
+                            <NavDropdown.Item onClick={handleSairClick} className="text-danger">
                                 <i className="fa-solid fa-sign-out me-2"></i>Sair
                             </NavDropdown.Item>
                         </NavDropdown>
-
-                        <Navbar.Toggle aria-controls="offcanvasNavbar" className="ms-2 border-0" />
                     </div>
-
-                    <Navbar.Offcanvas
-                        id="offcanvasNavbar"
-                        aria-labelledby="offcanvasNavbarLabel"
-                        placement="end"
-                    >
-                        <Offcanvas.Header closeButton>
-                            <Offcanvas.Title id="offcanvasNavbarLabel">Menu Principal</Offcanvas.Title>
-                        </Offcanvas.Header>
-                        <Offcanvas.Body>
-                            <Nav className="justify-content-end flex-grow-1 pe-3">
-                                {navLinks.map((link) =>
-                                    hasAnyPermission(link.permissions) && (
-                                        <LinkContainer to={link.path} key={link.path}>
-                                            <Nav.Link className="fs-5 mb-2 d-flex align-items-center">
-                                                <i className={`${link.icon} me-3 fa-fw`}></i>{link.text}
-                                            </Nav.Link>
-                                        </LinkContainer>
-                                    )
-                                )}
-                            </Nav>
-                        </Offcanvas.Body>
-                    </Navbar.Offcanvas>
                 </Container>
             </Navbar>
-            
-            {/* Modal de Alteração de Senha (sem alterações) */}
+
             <Modal show={showPasswordModal} onHide={handleClosePasswordModal} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Alterar Senha</Modal.Title>
@@ -186,6 +217,16 @@ const Header = (): ReactElement => {
                     </Modal.Footer>
                 </Form>
             </Modal>
+
+            <ModalGenerico
+                visivel={showLogoutModal}
+                titulo="Confirmar Saída"
+                mensagem="Deseja realmente sair do sistema?"
+                aoConfirmar={confirmLogout}
+                aoCancelar={() => setShowLogoutModal(false)}
+                textoConfirmar="Sair"
+                textoCancelar="Cancelar"
+            />
         </>
     );
 };

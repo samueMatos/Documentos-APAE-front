@@ -3,7 +3,7 @@ import { Col, Container, Row, Card as BootstrapCard } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { hasAnyPermission } from "../services/auth";
 
-// CSS para a nova Home. Adicionado aqui para facilitar.
+
 const styles = `
   .home-dashboard {
     background-color: #f4f7fc;
@@ -86,7 +86,6 @@ const styles = `
   }
 `;
 
-// Componente para o Card de Ação
 interface ActionCardProps {
   title: string;
   description: string;
@@ -96,7 +95,6 @@ interface ActionCardProps {
 }
 
 const ActionCard = ({ title, description, icon, link, permission }: ActionCardProps) => {
-  // A lógica de permissão é verificada antes de renderizar o card
   if (!hasAnyPermission(permission)) {
     return null;
   }
@@ -123,7 +121,7 @@ const ActionCard = ({ title, description, icon, link, permission }: ActionCardPr
  * @since 04/07/2025
  */
 const Home = (): ReactElement => {
-  // Lista de todos os cards da aplicação
+  
   const actionCards: ActionCardProps[] = [
     {
       title: "Gerenciar Alunos",
@@ -147,9 +145,9 @@ const Home = (): ReactElement => {
       permission: ["TIPO_DOCUMENTO"],
     },
     {
-        title: "Cadastrar Usuários",
-        description: "Adicione novos usuários ao sistema e atribua seus respectivos grupos e permissões.",
-        icon: "fa-user-plus",
+        title: "Gerenciar Usuários",
+        description: "Visualize os usuários do sistema, concedendo ou revogando permissões.",
+        icon: "fas fa-user-cog",
         link: "cadastro",
         permission: ["GERENCIAR_USUARIO"],
     },

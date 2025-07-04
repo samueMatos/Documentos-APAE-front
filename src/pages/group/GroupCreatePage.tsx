@@ -3,17 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Button } from 'react-bootstrap';
 import GroupForm, { GroupFormData } from '../../components/groups/GroupForm';
 import api from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
 
 const GroupCreatePage: React.FC = () => {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
+    const { showAlert } = useAlert();
 
     const handleCreate = async (data: GroupFormData) => {
         setIsSaving(true);
         try {
             await api.post('/grupo_usuario/create', data);
+            showAlert("O grupo de usuário foi criado com sucesso.", "Grupo criado com sucesso!", "success");
             navigate('/admin/grupos');
         } catch (error) {
+             showAlert("Erro ao criar grupo de usuário, verifique as informações e tente novamente.", "Erro ao criar grupo!", "success");
             console.error("Erro ao criar grupo", error);
         } finally {
             setIsSaving(false);

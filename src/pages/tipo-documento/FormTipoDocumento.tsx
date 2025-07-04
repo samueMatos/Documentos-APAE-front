@@ -1,11 +1,11 @@
 import { ReactElement, useEffect, useState } from "react";
-import { Container, Form, Spinner, Alert, Button, InputGroup, Row, Col } from "react-bootstrap";
+import { Container, Form, Spinner, Alert, Button, InputGroup, Col } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { TipoDocumentoRequest, TipoDocumentoResponse, UnidadeTempo } from "../../models/TipoDocumento";
 import { useAlert } from "../../hooks/useAlert";
 
-// Função para decompor os dias na melhor unidade para exibição
+
 const decomporDias = (totalDeDias: number): { valor: number; unidade: UnidadeTempo } => {
     if (totalDeDias > 0 && totalDeDias % 365 === 0) {
         return { valor: totalDeDias / 365, unidade: 'Anos' };
@@ -16,7 +16,7 @@ const decomporDias = (totalDeDias: number): { valor: number; unidade: UnidadeTem
     return { valor: totalDeDias, unidade: 'Dias' };
 };
 
-// Função para calcular o total de dias com base na unidade
+
 const calcularTotalDias = (valor: number, unidade: UnidadeTempo): number => {
     switch (unidade) {
         case 'Anos':
@@ -38,9 +38,11 @@ const FormTipoDocumento = (): ReactElement => {
     const [valorValidade, setValorValidade] = useState<number>(1);
     const [unidadeValidade, setUnidadeValidade] = useState<UnidadeTempo>('Dias');
     
+    
     // Estado de controle
     const [carregando, setCarregando] = useState<boolean>(false);
     const [erro, setErro] = useState<string | null>(null);
+    const { showAlert } = useAlert();
 
     useEffect(() => {
     const fetchData = async () => {
@@ -68,7 +70,7 @@ const FormTipoDocumento = (): ReactElement => {
     }, [id]);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        const { showAlert } = useAlert();
+        
         e.preventDefault();
         setErro(null);
 
@@ -82,15 +84,15 @@ const FormTipoDocumento = (): ReactElement => {
         try {
             if (id) {
                 await api.put(`/tipo-documento/${id}`, payload);
-                showAlert("Sucesso!", "Tipo de documento atualizado com sucesso!", "success");
+                showAlert("Tipo de documento atualizado com sucesso!", "Sucesso!", "success");
             } else {
                 await api.post('/tipo-documento', payload);
-                showAlert("Sucesso!", "Tipo de documento criado com sucesso!", "success");
+                showAlert("Tipo de documento criado com sucesso!", "Sucesso!", "success");
             }
             navigate("/tipo-documento");
         } catch (err: any) {
             setErro(err.response?.data?.message || "Erro ao salvar. Verifique os dados.");
-            showAlert("Erro ao Salvar", err.response?.data?.message || "Não foi possível salvar o tipo de documento.", "error");
+            showAlert("Não foi possível salvar o tipo de documento.", "Erro ao Salvar.", "error");
             console.error("Erro ao salvar:", err);
         }
     };

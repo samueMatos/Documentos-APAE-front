@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { Form, ListGroup, Spinner } from 'react-bootstrap';
 import { alunoService } from '../../services/alunoService';
 import Aluno from '../../models/Aluno';
@@ -7,9 +7,10 @@ interface SelectAlunosProps {
     value: number | null;
     onAlunoSelect: (aluno: Aluno | null) => void;
     required?: boolean;
+    disabled?: boolean;
 }
 
-const SelectAlunos = ({ value, onAlunoSelect, required }: SelectAlunosProps) => {
+const SelectAlunos = ({ value, onAlunoSelect, required, disabled }: SelectAlunosProps) => {
     const [termoBusca, setTermoBusca] = useState('');
     const [resultados, setResultados] = useState<Aluno[]>([]);
     const [carregando, setCarregando] = useState(false);
@@ -90,6 +91,7 @@ const SelectAlunos = ({ value, onAlunoSelect, required }: SelectAlunosProps) => 
                 onFocus={() => setMostrarResultados(true)}
                 autoComplete="off"
                 required={required}
+                disabled={disabled}
             />
             {mostrarResultados && termoBusca.length > 1 && (
                 <ListGroup style={{ position: 'absolute', zIndex: 1000, width: '100%', maxHeight: '200px', overflowY: 'auto', borderTop: 'none' }}>

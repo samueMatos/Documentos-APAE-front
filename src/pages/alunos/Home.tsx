@@ -1,4 +1,4 @@
-import {ChangeEvent, ReactElement, useEffect, useRef, useState, useCallback} from "react"; // 1. Adicione o useCallback
+import {ChangeEvent, ReactElement, useEffect, useRef, useState, useCallback} from "react";
 import { Button, Container, Form, Spinner, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +13,8 @@ import "../../assets/css/pages/aluno.css";
 import {Page} from "../../models/Page.ts";
 import { useAlert } from "../../hooks/useAlert";
 
+import ModalGenerico from "../../components/modals/ModalGenerico.tsx"; 
+
 const Home = (): ReactElement => {
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,8 +24,11 @@ const Home = (): ReactElement => {
     const [termoBusca, setTermoBusca] = useState<string>('');
     const [carregando, setCarregando] = useState<boolean>(true);
     const [erro, setErro] = useState<boolean>(false);
+    const { showAlert } = useAlert();
 
-    // 2. Mova a lógica de busca para uma função com useCallback
+   
+    const [modalExcluirVisivel, setModalExcluirVisivel] = useState<boolean>(false);
+
     const buscarDados = useCallback(async () => {
         setCarregando(true);
         setErro(false);
@@ -38,17 +43,14 @@ const Home = (): ReactElement => {
         } finally {
             setCarregando(false);
         }
-    }, [paginaAtual, termoBusca]); // Dependências da função
+    }, [paginaAtual, termoBusca]);
 
     useEffect(() => {
-        // 3. Simplifique o useEffect
         const timerId = setTimeout(() => {
             buscarDados();
         }, 300);
-
         return () => clearTimeout(timerId);
-
-    }, [buscarDados]); // O useEffect agora depende da função buscarDados
+    }, [buscarDados]);
 
     const handleBuscar = (e: ChangeEvent<HTMLInputElement>) => {
         setTermoBusca(e.target.value);
@@ -60,16 +62,15 @@ const Home = (): ReactElement => {
     };
 
     const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
-        const { showAlert } = useAlert();
         const files = event.target.files;
         if (files && files.length > 0) {
             const arquivoExcel = files[0];
             try {
                 await alunoService.importarAlunos(arquivoExcel);
-                showAlert("Importação Concluída", "Os alunos da planilha foram importados com sucesso.", "success");
-                buscarDados(); // Atualiza a lista após a importação
+                showAlert("Os alunos da planilha foram importados com sucesso.", "Importação Concluída", "success");
+                buscarDados();
             } catch (err) {
-                showAlert("Falha na Importação", "Ocorreu um erro ao importar a planilha. Verifique o formato do arquivo e os dados.", "error");
+                showAlert("Ocorreu um erro ao importar a planilha. Verifique o formato do arquivo e os dados.", "Falha na Importação", "error");
                 console.error("Erro na importação:", err);
             } finally {
                 if (fileInputRef.current) {
@@ -88,24 +89,36 @@ const Home = (): ReactElement => {
         setAlunoSelecionado(null);
     };
 
-    const handleInativarAluno = async () => {
 
-        const { showAlert } = useAlert();
-
-        if (!alunoSelecionado) return;
-
-        if (window.confirm("Deseja realmente excluir o aluno?")) {
-            try {
-                await alunoService.deletarAluno(alunoSelecionado);
-                showAlert("Aluno Excluído", "O aluno foi excluído com sucesso.", "success");
-                setAlunoSelecionado(null);
-                buscarDados();
-            } catch (err) {
-                showAlert("Erro ao Excluir", "Não foi possível excluir o aluno. Tente novamente mais tarde.", "error");
-                console.error(err);
-            }
+    const handleInativarAluno = () => {
+        if (alunoSelecionado) {
+            setModalExcluirVisivel(true);
         }
     };
+
+  
+    const handleConfirmarExclusao = async () => {
+        if (!alunoSelecionado) return;
+
+        try {
+            await alunoService.deletarAluno(alunoSelecionado);
+            showAlert("O aluno foi excluído com sucesso.", "Aluno Excluído", "success");
+            setAlunoSelecionado(null);
+            buscarDados();
+        } catch (err) {
+            showAlert("Não foi possível excluir o aluno. Tente novamente mais tarde.", "Erro ao Excluir", "error");
+            console.error(err);
+        } finally {
+            setModalExcluirVisivel(false); 
+        }
+    };
+    
+ 
+    const handleCancelarExclusao = () => {
+        setModalExcluirVisivel(false);
+    };
+
+
     return (
         <Container fluid>
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -113,10 +126,11 @@ const Home = (): ReactElement => {
                     <h2 className="text-primary">Alunos</h2>
                     <Form.Control
                         type="text"
-                        placeholder="Pesquisar por nome"
+                        placeholder="Pesquisar por nome..."
                         value={termoBusca}
                         onChange={handleBuscar}
                         className="border border-primary rounded-1"
+                        style={{ width: '300px' }}
                     />
                 </div>
                 <div className="d-flex gap-2">
@@ -145,34 +159,34 @@ const Home = (): ReactElement => {
                 <>
                     <Table borderless={true} hover responsive>
                         <thead>
-                        <tr className="thead-azul">
-                            <th></th>
-                            <th>Nome</th>
-                            <th>CPF</th>
-                            <th>Data de Nascimento</th>
-                        </tr>
+                            <tr className="thead-azul">
+                                <th></th>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Data de Nascimento</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {erro ? (
-                            <tr className="border border-primary">
-                                <td colSpan={4} className="text-center text-danger">Erro ao buscar alunos. Tente novamente.</td>
-                            </tr>
-                        ) : paginaData?.content && paginaData.content.length > 0 ? (
-                            paginaData.content.map(aluno => (
-                                <tr key={aluno.id} className="border border-primary tr-azul">
-                                    <td>
-                                        <Form.Check type="radio" name="alunoSelecionado" checked={alunoSelecionado === aluno.id} value={aluno.id} onChange={handleSelecionarAluno} />
-                                    </td>
-                                    <td>{aluno.nome}</td>
-                                    <td>{formatarCPF(aluno.cpf)}</td>
-                                    <td>{formatarData(aluno.dataNascimento)}</td>
+                            {erro ? (
+                                <tr className="border border-primary">
+                                    <td colSpan={4} className="text-center text-danger">Erro ao buscar alunos. Tente novamente.</td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr className="border border-primary">
-                                <td colSpan={4} className="text-center">Nenhum aluno encontrado.</td>
-                            </tr>
-                        )}
+                            ) : paginaData?.content && paginaData.content.length > 0 ? (
+                                paginaData.content.map(aluno => (
+                                    <tr key={aluno.id} className="border border-primary tr-azul">
+                                        <td>
+                                            <Form.Check type="radio" name="alunoSelecionado" checked={alunoSelecionado === aluno.id} value={aluno.id} onChange={handleSelecionarAluno} />
+                                        </td>
+                                        <td>{aluno.nome}</td>
+                                        <td>{formatarCPF(aluno.cpf)}</td>
+                                        <td>{formatarData(aluno.dataNascimento)}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr className="border border-primary">
+                                    <td colSpan={4} className="text-center">Nenhum aluno encontrado.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </Table>
 
@@ -189,6 +203,16 @@ const Home = (): ReactElement => {
                     </div>
                 </>
             )}
+
+            <ModalGenerico
+                visivel={modalExcluirVisivel}
+                titulo="Confirmar Exclusão"
+                mensagem="Deseja realmente excluir o aluno selecionado?"
+                textoConfirmar="Excluir"
+                textoCancelar="Cancelar"
+                aoConfirmar={handleConfirmarExclusao}
+                aoCancelar={handleCancelarExclusao}
+            />
         </Container>
     );
 };

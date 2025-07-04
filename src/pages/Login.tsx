@@ -4,7 +4,7 @@ import { Link, } from "react-router-dom";
 import { login } from "../services/auth";
 import api from "../services/api";
 import { useAlert } from "../hooks/useAlert";
-import axios from "axios";
+
 
 interface User {
   email: string,
@@ -56,12 +56,8 @@ const Login = (): ReactElement => {
 
     } catch (error) {
         console.error("Falha no login:", error);
-
-        let errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
-        if (axios.isAxiosError(error) && error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-        }
-        alert("Erro no login")
+        showAlert("Verifique as credenciais e tente novamente.", "Falha no login!", "error");
+       
     }
   };
 
@@ -70,7 +66,7 @@ const Login = (): ReactElement => {
       <Row className="vh-100 p-0 m-0 gap-0">
         <Col md={8} className="d-flex vh-100 flex-column justify-content-center align-items-center bg-light p-0">
           <Image src="/img/mapa.png" alt="Mapa do Brasil" className="mapa" />
-          <h1 className="fs-1 text-blue">APAE CRICIÚMA</h1>
+          <h1 className="fs-1 text-blue">APAE Criciúma</h1>
         </Col>
 
         <Col md={4} className="d-flex vh-100 flex-column justify-content-center align-items-center bg-blue p-0">
@@ -79,7 +75,7 @@ const Login = (): ReactElement => {
               <Image src="/img/logo.png" alt="Logo da APAE" className="logo text-center" />
             </div>
 
-            <h2 className="text-center mb-4">ENTRAR</h2>
+            <h2 className="text-center mb-4">Entrar</h2>
 
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>

@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Button, Form, InputGroup, Alert, Spinner, Container } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaSync } from 'react-icons/fa';
+
+import { Table, Form, Alert, Spinner, Container } from 'react-bootstrap'; 
 import api from '../../services/api';
 import { UserGroup } from '../../interfaces/UserGroup';
+import { useAlert } from '../../hooks/useAlert';
+import ModalGenerico from '../../components/modals/ModalGenerico';
+
+
+import Botao from '../../components/common/Botao';
+import Icone from '../../components/common/Icone';
+
+import '../../assets/css/pages/aluno.css'; 
 
 const GroupListPage: React.FC = () => {
     const [groups, setGroups] = useState<UserGroup[]>([]);
@@ -11,7 +19,12 @@ const GroupListPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
+    const { showAlert } = useAlert();
+    
+    const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
+    
     const fetchGroups = async () => {
         setLoading(true);
         setError(null);
@@ -20,25 +33,59 @@ const GroupListPage: React.FC = () => {
             setGroups(response.data);
         } catch (error) {
             console.error("Erro ao buscar grupos:", error);
-            setError("Falha ao carregar os grupos. Tente novamente.");
+            showAlert("Não foi possivel buscar os grupos!", "Ocorreu um erro ao buscar os grupos de usuário.", "error");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        
+        const timerId = setTimeout(() => {
+            
+        }, 300);
+        return () => clearTimeout(timerId);
+    }, [searchTerm]);
+
+    useEffect(() => {
         fetchGroups();
     }, []);
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Tem certeza que deseja excluir este grupo?')) {
-            try {
-                await api.delete(`/grupo_usuario/${id}`);
-                fetchGroups(); // Recarrega a lista
-            } catch (error) {
-                console.error("Erro ao excluir grupo:", error);
-                setError("Falha ao excluir o grupo.");
-            }
+  
+    const handleSelectGroup = (e: ChangeEvent<HTMLInputElement>) => {
+        const id = Number(e.target.value);
+        setSelectedGroupId(prevId => (prevId === id ? null : id));
+    };
+
+    const handleClearSelection = () => {
+        setSelectedGroupId(null);
+    };
+    
+    
+    const handleEdit = () => {
+        if (selectedGroupId) {
+            navigate(`/admin/grupos/editar/${selectedGroupId}`);
+        }
+    };
+
+    const handleDelete = () => {
+        if (selectedGroupId) {
+            setIsDeleteModalVisible(true);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (selectedGroupId === null) return;
+        try {
+            await api.delete(`/grupo_usuario/${selectedGroupId}`);
+            showAlert("Grupo de usuário excluído com sucesso.", "Sucesso!", "success");
+            setSelectedGroupId(null); // Limpa a seleção
+            fetchGroups(); 
+        } catch (error) {
+            console.error("Erro ao excluir grupo:", error);
+            showAlert("Ocorreu um erro ao excluir o grupo de usuário.", "Não foi possivel excluir o grupo!", "error");
+        } finally {
+            setIsDeleteModalVisible(false);
         }
     };
     
@@ -46,58 +93,62 @@ const GroupListPage: React.FC = () => {
         group.nome.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
     return (
-        <Container className="mt-4">
+        <Container fluid>
+           
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h1>Grupos de Usuários</h1>
                 <div>
-                    <Button variant="primary" className="me-2" onClick={() => navigate('/admin/grupos/novo')}>
-                        <FaPlus className="me-1" /> Cadastrar
-                    </Button>
-                    <Button variant="outline-secondary" onClick={fetchGroups}>
-                        <FaSync />
-                    </Button>
+                    <h2 className="text-primary">Grupos de Usuários</h2>
+                    <Form.Control
+                        type="text"
+                        placeholder="Pesquisar por nome..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="border border-primary rounded-1"
+                        style={{ width: '300px' }}
+                    />
+                </div>
+                <div className="d-flex gap-2">
+                    <Botao icone={<Icone nome="plus-circle" />} texto="Cadastrar" onClick={() => navigate('/admin/grupos/novo')} />
+                    <Botao icone={<Icone nome="pencil" />} texto="Editar" onClick={handleEdit} disabled={!selectedGroupId} />
+                    <Botao icone={<Icone nome="trash" />} texto="Excluir" onClick={handleDelete} disabled={!selectedGroupId} />
+                    {selectedGroupId && (
+                        <Botao icone={<Icone nome="x-circle" />} texto="Limpar Seleção" variant="secondary" onClick={handleClearSelection} />
+                    )}
                 </div>
             </div>
 
-            <InputGroup className="mb-3">
-                <Form.Control
-                    placeholder="Pesquisar por nome..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </InputGroup>
-
             {error && <Alert variant="danger">{error}</Alert>}
 
+           
             {loading ? (
-                <div className="text-center my-5">
-                    <Spinner animation="border" />
-                    <p className="mt-2">Carregando...</p>
-                </div>
+                <div className="text-center my-5"><Spinner animation="border" /></div>
             ) : (
-                <Table striped bordered hover responsive>
-                    <thead>
+                <Table borderless={true} hover responsive>
+                    <thead className="thead-azul">
                         <tr>
+                            <th></th> 
                             <th>Nome do Grupo</th>
                             <th>Permissões</th>
-                            <th className="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredGroups.length > 0 ? (
                             filteredGroups.map(group => (
-                                <tr key={group.id}>
+                                <tr key={group.id} className="border border-primary tr-azul">
+                                    <td>
+                                        <Form.Check
+                                            type="radio"
+                                            name="groupSelection"
+                                            value={group.id}
+                                            checked={selectedGroupId === group.id}
+                                            onChange={handleSelectGroup}
+                                        />
+                                    </td>
                                     <td>{group.nome}</td>
                                     <td>{group.permissions.map(p => p.nome).join(', ')}</td>
-                                    <td className="text-center">
-                                        <Button variant="outline-primary" size="sm" className="me-2" onClick={() => navigate(`/admin/grupos/editar/${group.id}`)}>
-                                            <FaEdit />
-                                        </Button>
-                                        <Button variant="outline-danger" size="sm" onClick={() => handleDelete(group.id)}>
-                                            <FaTrash />
-                                        </Button>
-                                    </td>
                                 </tr>
                             ))
                         ) : (
@@ -108,6 +159,16 @@ const GroupListPage: React.FC = () => {
                     </tbody>
                 </Table>
             )}
+
+            <ModalGenerico
+                visivel={isDeleteModalVisible}
+                titulo="Confirmar Exclusão"
+                mensagem={`Tem certeza que deseja excluir o grupo "${selectedGroup?.nome}"?`}
+                aoConfirmar={confirmDelete}
+                aoCancelar={() => setIsDeleteModalVisible(false)}
+                textoConfirmar="Excluir"
+                textoCancelar="Cancelar"
+            />
         </Container>
     );
 };

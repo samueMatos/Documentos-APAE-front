@@ -14,6 +14,7 @@ type DocumentoState = {
 
 const DocumentosCadastro: React.FC = () => {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [documento, setDocumento] = useState<DocumentoState>({
     tipoDocumento: "",
     file: null,
@@ -21,7 +22,7 @@ const DocumentosCadastro: React.FC = () => {
 
   const [alunoId, setAlunoId] = useState<number | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setDocumento((prev) => ({
       ...prev,
@@ -33,25 +34,25 @@ const DocumentosCadastro: React.FC = () => {
     if (e.target.files && e.target.files.length > 0) {
       setDocumento((prev) => ({
         ...prev,
-        file: e.target.files[0],
+        file: e.target.files?.[0] || null,
       }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    const { showAlert } = useAlert();
+    
     e.preventDefault();
 
     if (!alunoId) {
-      alert("Por favor, selecione um aluno.");
+      showAlert("Por favor, selecione um aluno.", "Erro!", "error");
       return;
     }
     if (!documento.tipoDocumento) {
-      alert("Por favor, selecione o tipo de documento.");
+      showAlert("Por favor, selecione um tipo de documento.", "Erro!", "error");
       return;
     }
     if (!documento.file) {
-      alert("Por favor, selecione um arquivo para upload.");
+      showAlert("Por favor, selecione um arquivo.", "Erro!", "error");
       return;
     }
 
@@ -66,17 +67,16 @@ const DocumentosCadastro: React.FC = () => {
       );
 
       if (response.status === 201) {
-        showAlert("Documento Enviado", response.data.message || "Seu documento foi enviado com sucesso!", "success");
+        showAlert("Seu documento foi enviado com sucesso!", "Documento Enviado", "success");
         navigate('/documentos');
-      }
+      }102
     } catch (error: any) {
-      const mensagemErro = error.response?.data?.message || "Ocorreu um erro ao enviar o documento.";
-      showAlert("Erro no Envio", mensagemErro, "error");
+      showAlert("Ocorreu um erro ao enviar o documento", "Erro no Envio", "error");
       console.error("Erro ao enviar o documento:", error);
     }
   };
   const handleAlunoSelect = (alunoSelecionado: Aluno | null) => {
-    setAlunoId(alunoSelecionado ? alunoSelecionado.id : null);
+    setAlunoId(alunoSelecionado?.id ?? null);
   };
 
   return (
@@ -102,6 +102,7 @@ const DocumentosCadastro: React.FC = () => {
               required
           />
           <SelectTipoDocumento
+              name="tipoDocumento"
               value={documento.tipoDocumento}
               onChange={handleChange}
               required

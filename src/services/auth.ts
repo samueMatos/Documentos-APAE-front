@@ -4,18 +4,18 @@ import { jwtDecode } from "jwt-decode";
 
 
 /**
- * @description Retorna o token do localStorage.
+ * @description 
  */
 export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 
 
 /**
- * @description Retorna se o usuário está autenticado (se o token existe).
+ * @description 
  */
 
 export interface DecodedToken {
-    sub: string; // Subject (geralmente o e-mail)
-    nome?: string; // Nome do usuário (se estiver no token)
+    sub: string;
+    nome?: string; 
     permissions: string[];
     exp: number;
 }
@@ -26,7 +26,6 @@ export const getDecodedToken = (): DecodedToken | null => {
         return null;
     }
     try {
-        // Decodifica o token usando a interface
         return jwtDecode<DecodedToken>(token);
     } catch (e) {
         console.error("Erro ao decodificar o token:", e);
@@ -42,14 +41,13 @@ export const estaAutenticado = (): boolean => {
 
     try {
         const decodedToken: { exp: number } = jwtDecode(token);
-        // O campo 'exp' é em segundos, então multiplicamos por 1000 para comparar com milissegundos
         if (decodedToken.exp * 1000 < Date.now()) {
-            logout(); // Limpa o token expirado
+            logout(); 
             return false;
         }
     } catch (e) {
         console.error("Erro ao decodificar o token:", e);
-        logout(); // Limpa token inválido
+        logout(); 
         return false;
     }
 
@@ -58,9 +56,9 @@ export const estaAutenticado = (): boolean => {
 
 
 /**
- * @description Salva o token e as permissões do usuário no localStorage.
- * @param {string} token - O token JWT recebido da API.
- * @param {string[]} permissions - A lista de permissões do usuário.
+ * @description 
+ * @param {string} token 
+ * @param {string[]} permissions
  */
 export const login = (token: string, permissions: string[]): void => {
     localStorage.setItem(TOKEN_KEY, token);
@@ -69,7 +67,7 @@ export const login = (token: string, permissions: string[]): void => {
 
 
 /**
- * @description Remove o token e as permissões do localStorage.
+ * @description 
  */
 export const logout = (): void => {
     localStorage.removeItem(TOKEN_KEY);
@@ -78,8 +76,8 @@ export const logout = (): void => {
 
 
 /**
- * @description Verifica se o usuário logado possui uma permissão específica.
- * @param {string} permission - O nome da permissão a ser verificada.
+ * @description 
+ * @param {string} permission 
  * @returns {boolean}
  */
 export const hasPermission = (permission: string): boolean => {
@@ -98,8 +96,8 @@ export const hasPermission = (permission: string): boolean => {
 };
 
 /**
- * @description Verifica se o usuário logado possui PELO MENOS UMA das permissões de uma lista.
- * @param {string[]} permissions - Um array com os nomes das permissões a serem verificadas.
+ * @description 
+ * @param {string[]} permissions 
  * @returns {boolean}
  */
 export const hasAnyPermission = (permissions: string[]): boolean => {
@@ -110,7 +108,6 @@ export const hasAnyPermission = (permissions: string[]): boolean => {
 
     try {
         const userPermissionsSet: Set<string> = new Set(JSON.parse(storedPermissions));
-        // Retorna true se alguma das permissões na lista de entrada existir no Set do usuário
         return permissions.some(permission => userPermissionsSet.has(permission));
     } catch (e) {
         console.error("Erro ao ler as permissões do localStorage", e);

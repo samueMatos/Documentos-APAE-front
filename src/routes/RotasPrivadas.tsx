@@ -13,7 +13,10 @@ import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
-import Cadastro from "../pages/Cadastro";
+import Cadastro from "../pages/usuario/CadastroUsuario";
+import DocumentosUpdate from "../pages/documentos/DocumentosUpdate";
+import GerenciamentoUsuario from "../pages/usuario/GerenciamentoUsuario";
+import UsuarioUpdate from "../pages/usuario/UsuarioUpdate";
 
 /**
  * @description Rotas privadas da App.
@@ -48,12 +51,15 @@ const RotasPrivadas = (): ReactElement => (
             <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
             <Route path="documentos" element={<DocumentosPage />} />
             <Route path="cadastrar" element={<DocumentosCadastro />} />
+            <Route path="cadastrar/:id" element={<DocumentosUpdate />} />
             </Route>
 
 
             <Route element={<ProtectedRoute permission="GERENCIAR_USUARIO" />}>
             <Route path="usuario" element={<DetalhesUsuario />} />
             <Route path="cadastro" element={<Cadastro />} />
+            <Route path="usuario/list" element={<GerenciamentoUsuario />} />
+            <Route path="usuario/editar/:id" element={<UsuarioUpdate />} />
             </Route>
 
             <Route element={<ProtectedRoute permission="GRUPOS_PERMISSOES" />}>

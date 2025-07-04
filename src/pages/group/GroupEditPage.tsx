@@ -5,14 +5,16 @@ import GroupForm, { GroupFormData } from '../../components/groups/GroupForm';
 import api from '../../services/api';
 import { UserGroup } from '../../interfaces/UserGroup';
 import { AxiosResponse } from 'axios';
+import { useAlert } from '../../hooks/useAlert';
 
 const GroupEditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [group, setGroup] = useState<UserGroup | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const { showAlert } = useAlert();
 
     useEffect(() => {
         if (id) {
@@ -22,7 +24,7 @@ const GroupEditPage: React.FC = () => {
                 })
                 .catch(err => {
                     console.error(err);
-                    setError("Não foi possível carregar os dados do grupo.");
+                    showAlert("Erro ao carregar detalhes do grupo.", "Não foi possível carregar os detalhes do grupo.", "error");
                 })
                 .finally(() => {
                     setLoading(false);
@@ -34,9 +36,12 @@ const GroupEditPage: React.FC = () => {
         setIsSaving(true);
         try {
             await api.put(`/grupo_usuario/${id}`, data);
+             showAlert("O grupo foi atualizado com sucesso.", "Grupo atualizado!", "success");
             navigate('/admin/grupos');
+           
         } catch (error) {
             console.error("Erro ao atualizar grupo", error);
+            showAlert("Não foi possível atualizar o grupo.", "Erro ao atualizar grupo.", "error");
         } finally {
             setIsSaving(false);
         }

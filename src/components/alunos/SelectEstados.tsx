@@ -1,11 +1,11 @@
-import { Col, Form } from 'react-bootstrap'
-
+import { ChangeEvent } from 'react';
+import { Col, Form } from 'react-bootstrap';
 
 type Props = {
     name: string;
     controlId: string;
     className?: string;
-    onChange: () => void
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
     value: string;
 }
 
@@ -53,14 +53,22 @@ const SelectEstados = (props: Props) => {
     return (
         <Form.Group controlId={props.controlId} as={Col} className={props.className}>
             <Form.Label>Estados</Form.Label>
-            <Form.Control as="select" required={true} name={props.name} onChange={props.onChange}>
-                <option disabled selected={!props.value ? true : false} value="">Selecione um Estado</option>
-                {estados.map((estado, i) => {
-                    return <option key={i} selected={props.value === estado.abreviacao ? true : false} value={estado.abreviacao}>{estado.nome}</option>
-                })}
+            <Form.Control
+                as="select"
+                required={true}
+                name={props.name}
+                onChange={props.onChange}
+                value={props.value}
+            >
+                <option disabled value="">Selecione um Estado</option>
+                {estados.map((estado, i) => (
+                    <option key={i} value={estado.abreviacao}>
+                        {estado.nome}
+                    </option>
+                ))}
             </Form.Control>
         </Form.Group>
     )
 }
 
-export default SelectEstados
+export default SelectEstados;

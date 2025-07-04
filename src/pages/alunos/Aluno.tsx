@@ -17,6 +17,7 @@ import { useAlert } from "../../hooks/useAlert";
 const Aluno = (): ReactElement => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [carregando, setCarregando] = useState<boolean>(false);
   const [formData, setFormData] = useState<ModelAluno>({
     nome: '',
@@ -122,16 +123,15 @@ const Aluno = (): ReactElement => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-    const { showAlert } = useAlert();
     e.preventDefault();
     console.log("Dados enviados:", formData);
     try {
       if (id) {
         await alunoService.atualizarAluno(Number(id), formData);
-        showAlert("Aluno Atualizado!", "Os dados do aluno foram atualizados com sucesso.", "success");
+        showAlert("Os dados do aluno foram atualizados com sucesso.", "Aluno Atualizado!", "success");
       } else {
         await alunoService.cadastrarAluno(formData);
-        showAlert("Aluno Cadastrado!", "O novo aluno foi registrado com sucesso no sistema.", "success");
+        showAlert("O novo aluno foi registrado com sucesso no sistema.", "Aluno Cadastrado!", "success");
       }
 
       navigate("/alunos");
@@ -206,10 +206,6 @@ const Aluno = (): ReactElement => {
               <Form.Control type="date" name="dataEntrada" value={formData.dataEntrada} onChange={handleChange} max={new Date().toISOString().split("T")[0]} />
             </Form.Group>
 
-            <Form.Group controlId="deficiencia" as={Col}>
-              <Form.Label>Deficiência</Form.Label>
-              <Form.Control type="data" name="deficiencia" value={formData.deficiencia} onChange={handleChange} placeholder="Selecione o laudo" />
-            </Form.Group>
 
             <Form.Group controlId="observacoes" as={Col}>
               <Form.Label>Observações</Form.Label>
@@ -239,7 +235,7 @@ const Aluno = (): ReactElement => {
                 </InputMask>
 
                 <Col sm={6}>
-                  <SelectEstados controlId="estado" value={formData.estado} onChange={handleChange} />
+                 <SelectEstados name="estado" controlId="estado" value={formData.estado} onChange={handleChange} />
                 </Col>
 
                 <Col>

@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import  { ChangeEvent, useEffect, useState } from 'react';
 import { Form } from 'react-bootstrap';
 import api from '../../services/api';
 
@@ -7,13 +7,16 @@ interface TipoDocumento {
     nome: string;
 }
 
+
 type Props = {
+    name: string; 
     value: string;
-    onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void; 
     required?: boolean;
 };
 
-const SelectTipoDocumento = (props: Props) => {
+
+const SelectTipoDocumento = ({ name, value, onChange, required }: Props) => {
     const [tipos, setTipos] = useState<TipoDocumento[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
@@ -22,7 +25,6 @@ const SelectTipoDocumento = (props: Props) => {
         const fetchTiposDocumento = async () => {
             try {
                 const response = await api.get<TipoDocumento[]>('/tipo-documento');
-
                 setTipos(response.data || []);
             } catch (error) {
                 console.error("Erro ao buscar os tipos de documento:", error);
@@ -41,11 +43,11 @@ const SelectTipoDocumento = (props: Props) => {
             <Form.Label>Tipo de Documento</Form.Label>
             <Form.Control
                 as="select"
-                name="tipoDocumento"
-                value={props.value}
-                onChange={props.onChange}
+                name={name} 
+                value={value}
+                onChange={onChange}
                 disabled={carregando || !!erro}
-                required={props.required}
+                required={required}
             >
                 <option value="">
                     {carregando && "Carregando..."}
