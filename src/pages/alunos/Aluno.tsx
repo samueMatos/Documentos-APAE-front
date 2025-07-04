@@ -1,5 +1,5 @@
 import {ChangeEvent, ReactElement, useEffect, useState} from "react";
-import { Col, Container, Form, InputGroupProps, Row, Spinner } from "react-bootstrap";
+import { Col, Container, Form, InputGroupProps, Row, Spinner, Button } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import ModelAluno from "../../models/Aluno";
@@ -7,6 +7,7 @@ import InputMask from "react-input-mask";
 import SelectEstados from "../../components/alunos/SelectEstados";
 import Botao from "../../components/common/Botao";
 import {alunoService} from "../../services/alunoService.ts";
+import { useAlert } from "../../hooks/useAlert";
 
 /**
  * @description Página de Cadastro de Alunos.
@@ -121,16 +122,18 @@ const Aluno = (): ReactElement => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const { showAlert } = useAlert();
     e.preventDefault();
     console.log("Dados enviados:", formData);
     try {
       if (id) {
         await alunoService.atualizarAluno(Number(id), formData);
+        showAlert("Aluno Atualizado!", "Os dados do aluno foram atualizados com sucesso.", "success");
       } else {
         await alunoService.cadastrarAluno(formData);
+        showAlert("Aluno Cadastrado!", "O novo aluno foi registrado com sucesso no sistema.", "success");
       }
 
-      alert(`Aluno ${id ? "editado" : "cadastrado"} com sucesso!`);
       navigate("/alunos");
     } catch (err) {
       console.error("Erro ao realizar POST/PUT em aluno:", err);
@@ -139,7 +142,20 @@ const Aluno = (): ReactElement => {
 
   return (
     <Container>
-      <h1 className="my-4">{ id ? "Editar" : "Cadastrar" } Aluno</h1>
+      <div className="d-flex align-items-center gap-3 my-4">
+        <Button
+          variant="light"
+          onClick={() => navigate(-1)}
+          className="d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+          style={{ width: '40px', height: '40px', border: '1px solid #dee2e6' }}
+          title="Voltar"
+        >
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+           </svg>
+        </Button>
+        <h1 className="m-0">{ id ? "Editar" : "Cadastrar" } Aluno</h1>
+      </div>
 
       {carregando ? (
         <div className="d-flex justify-content-center my-5">

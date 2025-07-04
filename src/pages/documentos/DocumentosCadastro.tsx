@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import SelectAlunos from "../../components/alunos/SelectAlunos";
 import SelectTipoDocumento from "../../components/tipoDocumento/SelectTipoDocumento.tsx";
 import Aluno from "../../models/Aluno";
+import { useAlert } from "../../hooks/useAlert";
 
 type DocumentoState = {
   tipoDocumento: string;
@@ -38,6 +39,7 @@ const DocumentosCadastro: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const { showAlert } = useAlert();
     e.preventDefault();
 
     if (!alunoId) {
@@ -64,12 +66,12 @@ const DocumentosCadastro: React.FC = () => {
       );
 
       if (response.status === 201) {
-        alert(response.data.message || "Documento enviado com sucesso!");
+        showAlert("Documento Enviado", response.data.message || "Seu documento foi enviado com sucesso!", "success");
         navigate('/documentos');
       }
     } catch (error: any) {
       const mensagemErro = error.response?.data?.message || "Ocorreu um erro ao enviar o documento.";
-      alert(mensagemErro);
+      showAlert("Erro no Envio", mensagemErro, "error");
       console.error("Erro ao enviar o documento:", error);
     }
   };
@@ -78,8 +80,21 @@ const DocumentosCadastro: React.FC = () => {
   };
 
   return (
-      <div className="container">
-        <h1 className="my-4">Cadastro de Documentos</h1>
+    <Container>
+        <div className="d-flex align-items-center gap-3 my-4">
+            <Button
+              variant="light"
+              onClick={() => navigate(-1)}
+              className="d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+              style={{ width: '40px', height: '40px', border: '1px solid #dee2e6' }}
+              title="Voltar"
+            >
+               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+               </svg>
+            </Button>
+            <h1 className="m-0">Cadastro de Documentos</h1>
+        </div>
         <Form onSubmit={handleSubmit} className="mb-4">
           <SelectAlunos
               value={alunoId}
@@ -112,7 +127,7 @@ const DocumentosCadastro: React.FC = () => {
             Cancelar
           </Button>
         </Form>
-      </div>
+      </Container>
   );
 };
 

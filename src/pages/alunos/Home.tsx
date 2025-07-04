@@ -1,4 +1,4 @@
-import {ChangeEvent, ReactElement, useEffect, useRef, useState} from "react";
+import {ChangeEvent, ReactElement, useEffect, useRef, useState, useCallback} from "react"; // 1. Adicione o useCallback
 import { Button, Container, Form, Spinner, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +11,7 @@ import formatarCPF from "../../helpers/formatarCPF";
 import formatarData from "../../helpers/formatarData";
 import "../../assets/css/pages/aluno.css";
 import {Page} from "../../models/Page.ts";
+import { useAlert } from "../../hooks/useAlert";
 
 const Home = (): ReactElement => {
     const navigate = useNavigate();
@@ -22,30 +23,32 @@ const Home = (): ReactElement => {
     const [carregando, setCarregando] = useState<boolean>(true);
     const [erro, setErro] = useState<boolean>(false);
 
-    useEffect(() => {
-        const buscarDados = async () => {
-            setCarregando(true);
-            setErro(false);
-            try {
-                const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca);
-                setPaginaData(resposta);
-            } catch (err: any) {
-                setErro(true);
-                const mensagemErro = err.response?.data || "Erro ao importar alunos.";
-                alert(mensagemErro);
-                console.error("Erro ao buscar alunos:", err);
-            } finally {
-                setCarregando(false);
-            }
-        };
+    // 2. Mova a lógica de busca para uma função com useCallback
+    const buscarDados = useCallback(async () => {
+        setCarregando(true);
+        setErro(false);
+        try {
+            const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca);
+            setPaginaData(resposta);
+        } catch (err: any) {
+            setErro(true);
+            const mensagemErro = err.response?.data || "Erro ao importar alunos.";
+            alert(mensagemErro);
+            console.error("Erro ao buscar alunos:", err);
+        } finally {
+            setCarregando(false);
+        }
+    }, [paginaAtual, termoBusca]); // Dependências da função
 
+    useEffect(() => {
+        // 3. Simplifique o useEffect
         const timerId = setTimeout(() => {
             buscarDados();
         }, 300);
 
         return () => clearTimeout(timerId);
 
-    }, [paginaAtual, termoBusca]);
+    }, [buscarDados]); // O useEffect agora depende da função buscarDados
 
     const handleBuscar = (e: ChangeEvent<HTMLInputElement>) => {
         setTermoBusca(e.target.value);
@@ -57,24 +60,21 @@ const Home = (): ReactElement => {
     };
 
     const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+        const { showAlert } = useAlert();
         const files = event.target.files;
         if (files && files.length > 0) {
             const arquivoExcel = files[0];
             try {
                 await alunoService.importarAlunos(arquivoExcel);
-                alert("Alunos importados com sucesso!");
-
-                const currentTerm = termoBusca;
-                setTermoBusca(currentTerm + ' ');
-                setTermoBusca(currentTerm);
+                showAlert("Importação Concluída", "Os alunos da planilha foram importados com sucesso.", "success");
+                buscarDados(); // Atualiza a lista após a importação
             } catch (err) {
-                alert("Erro ao importar alunos. Verifique o console para detalhes.");
+                showAlert("Falha na Importação", "Ocorreu um erro ao importar a planilha. Verifique o formato do arquivo e os dados.", "error");
                 console.error("Erro na importação:", err);
             } finally {
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
-
             }
         }
     };
@@ -89,18 +89,19 @@ const Home = (): ReactElement => {
     };
 
     const handleInativarAluno = async () => {
+
+        const { showAlert } = useAlert();
+
         if (!alunoSelecionado) return;
 
         if (window.confirm("Deseja realmente excluir o aluno?")) {
             try {
                 await alunoService.deletarAluno(alunoSelecionado);
-                alert("Aluno excluído com sucesso!");
-                const currentTerm = termoBusca;
-                setTermoBusca(currentTerm + ' ');
-                setTermoBusca(currentTerm);
+                showAlert("Aluno Excluído", "O aluno foi excluído com sucesso.", "success");
                 setAlunoSelecionado(null);
+                buscarDados();
             } catch (err) {
-                alert("Erro ao excluir aluno!");
+                showAlert("Erro ao Excluir", "Não foi possível excluir o aluno. Tente novamente mais tarde.", "error");
                 console.error(err);
             }
         }

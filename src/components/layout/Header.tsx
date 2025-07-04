@@ -1,35 +1,58 @@
-import { ReactElement, useState, FormEvent, ChangeEvent } from "react";
-import { Nav, Button, Modal, Form, Alert, Container, Navbar, Offcanvas } from "react-bootstrap";
-import { FaBars } from "react-icons/fa";
-import { logout, hasAnyPermission } from "../../services/auth";
-import api from "../../services/api";
-import "../../assets/css/pages/header.css";
-import Icone from "../common/Icone";
-import { useNavigate } from "react-router-dom";
+// src/components/layout/Header.tsx
 
+import { ReactElement, useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { Nav, Button, Modal, Form, Alert, Container, Navbar, Offcanvas, NavDropdown } from "react-bootstrap";
+import { LinkContainer } from "react-router-bootstrap";
+import { logout, hasAnyPermission, getDecodedToken } from "../../services/auth";
+import api from "../../services/api";
+
+// --- Interfaces ---
 interface MensagemState {
     tipo: 'success' | 'danger' | null;
     texto: string;
 }
 
+interface NavLinkItem {
+  path: string;
+  text: string;
+  icon: string;
+  permissions: string[];
+}
+
+// --- Componente Header Refatorado ---
 const Header = (): ReactElement => {
-    const navigate = useNavigate();
     const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
     const [senhaAtual, setSenhaAtual] = useState<string>("");
     const [novaSenha, setNovaSenha] = useState<string>("");
     const [confirmaNovaSenha, setConfirmaNovaSenha] = useState<string>("");
     const [mensagemSenha, setMensagemSenha] = useState<MensagemState>({ tipo: null, texto: "" });
     const [loadingSenha, setLoadingSenha] = useState<boolean>(false);
+    const [userName, setUserName] = useState<string>("Usuário");
 
+    useEffect(() => {
+        const tokenData = getDecodedToken();
+        if (tokenData) {
+            // Usa o 'nome' se existir no token, senão, usa o 'sub' (email)
+            setUserName(tokenData.nome || tokenData.sub);
+        }
+    }, []);
+
+    // Lista centralizada de links de navegação
+    const navLinks: NavLinkItem[] = [
+        { path: "/", text: "Início", icon: "fa-solid fa-house", permissions: ["ALUNOS", "DOCUMENTOS", "TIPO_DOCUMENTO", "GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"] },
+        { path: "/alunos", text: "Alunos", icon: "fa-solid fa-address-book", permissions: ["ALUNOS"] },
+        { path: "/documentos", text: "Documentos", icon: "fa-solid fa-folder-open", permissions: ["DOCUMENTOS"] },
+        { path: "/tipo-documento", text: "Tipos de Documento", icon: "fa-solid fa-file-alt", permissions: ["TIPO_DOCUMENTO"] },
+        { path: "/admin/grupos", text: "Grupos de Usuários", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
+        { path: "/cadastro", text: "Cadastrar Usuário", icon: "fa-solid fa-user-plus", permissions: ["GERENCIAR_USUARIO"] },
+    ];
+    
+    // --- Handlers (sem alterações na lógica) ---
     const handleSair = () => {
         if (window.confirm("Deseja realmente sair?")) {
             logout();
             window.location.href = '/entrar';
         }
-    };
-
-    const handleNavigate = (rota: string) => {
-        navigate(rota);
     };
 
     const handleShowPasswordModal = () => {
@@ -40,9 +63,7 @@ const Header = (): ReactElement => {
         setShowPasswordModal(true);
     };
 
-    const handleClosePasswordModal = () => {
-        setShowPasswordModal(false);
-    };
+    const handleClosePasswordModal = () => setShowPasswordModal(false);
 
     const handleChangePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -60,9 +81,7 @@ const Header = (): ReactElement => {
         try {
             await api.put("/user/change-password", { senhaAtual, novaSenha });
             setMensagemSenha({ tipo: 'success', texto: 'Senha alterada com sucesso!' });
-            setTimeout(() => {
-                handleClosePasswordModal();
-            }, 2000);
+            setTimeout(() => handleClosePasswordModal(), 2000);
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || 'Erro ao alterar senha.';
             setMensagemSenha({ tipo: 'danger', texto: errorMsg });
@@ -73,51 +92,70 @@ const Header = (): ReactElement => {
 
     return (
         <>
-            <Navbar expand="md" className="bg-primary">
-                <Container>
-                    <Navbar.Toggle aria-controls="offcanvasNavbar" className="text-white border-0">
-                        <FaBars size={24} />
-                    </Navbar.Toggle>
-                    <Navbar.Offcanvas id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel" placement="start">
+            <Navbar expand="lg" bg="primary" variant="dark" className="shadow-sm px-md-3" sticky="top">
+                <Container fluid>
+                    <LinkContainer to="/">
+                        <Navbar.Brand className="d-flex align-items-center">
+                            <img
+                                src="/img/logo.png"
+                                width="35"
+                                height="35"
+                                className="d-inline-block align-top me-2"
+                                alt="Logo da APAE"
+                            />
+                            <span className="d-none d-sm-inline">Gestão APAE</span>
+                        </Navbar.Brand>
+                    </LinkContainer>
+                    
+                    <div className="ms-auto d-flex align-items-center">
+                        <NavDropdown
+                            title={
+                                <>
+                                    <i className="fa-solid fa-user-circle fa-lg text-white"></i>
+                                    <span className="d-none d-md-inline ms-2 text-white">{userName}</span>
+                                </>
+                            }
+                            id="user-profile-dropdown"
+                            align="end"
+                        >
+                            <NavDropdown.Item onClick={handleShowPasswordModal}>
+                                <i className="fa-solid fa-key me-2"></i>Alterar Senha
+                            </NavDropdown.Item>
+                            <NavDropdown.Divider />
+                            <NavDropdown.Item onClick={handleSair} className="text-danger">
+                                <i className="fa-solid fa-sign-out me-2"></i>Sair
+                            </NavDropdown.Item>
+                        </NavDropdown>
+
+                        <Navbar.Toggle aria-controls="offcanvasNavbar" className="ms-2 border-0" />
+                    </div>
+
+                    <Navbar.Offcanvas
+                        id="offcanvasNavbar"
+                        aria-labelledby="offcanvasNavbarLabel"
+                        placement="end"
+                    >
                         <Offcanvas.Header closeButton>
-                            <Offcanvas.Title id="offcanvasNavbarLabel">Menu</Offcanvas.Title>
+                            <Offcanvas.Title id="offcanvasNavbarLabel">Menu Principal</Offcanvas.Title>
                         </Offcanvas.Header>
                         <Offcanvas.Body>
-                            <Nav className="me-auto">
-                                <Nav.Link onClick={() => handleNavigate("/")} className="AMARELO"><Icone nome="home" texto="INÍCIO" /></Nav.Link>
-                                
-                                {/* 2. APLICAÇÃO DAS PERMISSÕES NOS LINKS */}
-                                {hasAnyPermission(['ALUNOS']) && (
-                                    <Nav.Link onClick={() => handleNavigate("alunos")} className="AMARELO"><Icone nome="address-book" texto="ALUNOS" /></Nav.Link>
+                            <Nav className="justify-content-end flex-grow-1 pe-3">
+                                {navLinks.map((link) =>
+                                    hasAnyPermission(link.permissions) && (
+                                        <LinkContainer to={link.path} key={link.path}>
+                                            <Nav.Link className="fs-5 mb-2 d-flex align-items-center">
+                                                <i className={`${link.icon} me-3 fa-fw`}></i>{link.text}
+                                            </Nav.Link>
+                                        </LinkContainer>
+                                    )
                                 )}
-
-                                {hasAnyPermission(['DOCUMENTOS']) && (
-                                    <Nav.Link onClick={() => handleNavigate("documentos")} className="AMARELO"><Icone nome="folder-open" texto="DOCUMENTOS" /></Nav.Link>
-                                )}
-
-                                
-                                {hasAnyPermission(['TIPO_DOCUMENTO']) && (
-                                     <Nav.Link onClick={() => handleNavigate("tipo-documento")} className="AMARELO"><Icone nome="file-alt" texto="TIPO DOCUMENTO" /></Nav.Link>
-                                )}
-
-                                {hasAnyPermission(['GRUPOS_PERMISSOES']) && (
-                                    <Nav.Link onClick={() => handleNavigate("admin/grupos")} className="AMARELO"><Icone nome="users-cog" texto="GRUPO DE USUÁRIO" /></Nav.Link>
-                                )}
-
-                                 {hasAnyPermission(['GERENCIAR_USUARIO']) && (
-                                    <Nav.Link onClick={() => handleNavigate("cadastro")} className="AMARELO"><Icone nome="user-plus" texto="CADASTRO" /></Nav.Link>
-                                )}
-
-                            
-                                <Nav.Link onClick={handleShowPasswordModal} className="AMARELO"><Icone nome="key" texto="ALTERAR SENHA" /></Nav.Link>
-                                <Nav.Link onClick={handleSair} className="AMARELO"><Icone nome="sign-out" texto="SAIR" /></Nav.Link>
                             </Nav>
                         </Offcanvas.Body>
                     </Navbar.Offcanvas>
                 </Container>
             </Navbar>
-
-        
+            
+            {/* Modal de Alteração de Senha (sem alterações) */}
             <Modal show={showPasswordModal} onHide={handleClosePasswordModal} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Alterar Senha</Modal.Title>

@@ -7,6 +7,7 @@ import formatarDataHora from "../../helpers/formatarDataHora";
 import Botao from "../../components/common/Botao";
 import Icone from "../../components/common/Icone";
 import ModalGenerico from "../../components/modals/ModalGenerico";
+import { useAlert } from "../../hooks/useAlert";
 
 const HomeTipoDocumento = (): ReactElement => {
     const navigate = useNavigate();
@@ -34,15 +35,16 @@ const HomeTipoDocumento = (): ReactElement => {
     }, []);
 
     const handleExcluir = async () => {
+        const { showAlert } = useAlert();
         if (!itemParaExcluir) return;
 
         try {
             await api.delete(`/tipo-documento/${itemParaExcluir.id}`);
-            alert("Tipo de documento excluído com sucesso!");
+            showAlert("Excluído!", "O tipo de documento foi excluído com sucesso.", "success");
             setItemParaExcluir(null); // Fecha o modal
             buscarDados(); // Atualiza a lista
         } catch (err) {
-            alert("Erro ao excluir o tipo de documento.");
+            showAlert("Erro ao Excluir", "Não foi possível excluir. Verifique se este tipo de documento não está em uso.", "error");
             console.error("Erro ao excluir:", err);
         }
     };

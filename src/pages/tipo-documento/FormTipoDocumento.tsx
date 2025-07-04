@@ -3,6 +3,7 @@ import { Container, Form, Spinner, Alert, Button, InputGroup, Row, Col } from "r
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { TipoDocumentoRequest, TipoDocumentoResponse, UnidadeTempo } from "../../models/TipoDocumento";
+import { useAlert } from "../../hooks/useAlert";
 
 // Função para decompor os dias na melhor unidade para exibição
 const decomporDias = (totalDeDias: number): { valor: number; unidade: UnidadeTempo } => {
@@ -67,6 +68,7 @@ const FormTipoDocumento = (): ReactElement => {
     }, [id]);
 
     const handleSubmit = async (e: React.FormEvent) => {
+        const { showAlert } = useAlert();
         e.preventDefault();
         setErro(null);
 
@@ -80,21 +82,35 @@ const FormTipoDocumento = (): ReactElement => {
         try {
             if (id) {
                 await api.put(`/tipo-documento/${id}`, payload);
-                alert("Tipo de documento atualizado com sucesso!");
+                showAlert("Sucesso!", "Tipo de documento atualizado com sucesso!", "success");
             } else {
                 await api.post('/tipo-documento', payload);
-                alert("Tipo de documento criado com sucesso!");
+                showAlert("Sucesso!", "Tipo de documento criado com sucesso!", "success");
             }
             navigate("/tipo-documento");
         } catch (err: any) {
             setErro(err.response?.data?.message || "Erro ao salvar. Verifique os dados.");
+            showAlert("Erro ao Salvar", err.response?.data?.message || "Não foi possível salvar o tipo de documento.", "error");
             console.error("Erro ao salvar:", err);
         }
     };
 
     return (
         <Container>
-            <h1 className="my-4">{id ? "Editar" : "Criar Novo"} Tipo de Documento</h1>
+            <div className="d-flex align-items-center gap-3 my-4">
+              <Button
+                variant="light"
+                onClick={() => navigate(-1)}
+                className="d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+                style={{ width: '40px', height: '40px', border: '1px solid #dee2e6' }}
+                title="Voltar"
+              >
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                 </svg>
+              </Button>
+              <h1 className="m-0">{id ? "Editar" : "Criar Novo"} Tipo de Documento</h1>
+            </div>
 
             {carregando ? (
                 <div className="d-flex justify-content-center my-5"><Spinner animation="border" /></div>

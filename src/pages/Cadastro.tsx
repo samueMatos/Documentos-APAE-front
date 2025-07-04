@@ -88,11 +88,11 @@ const Cadastro = (): ReactElement => {
 
     try {
       await servicoCadastro(dados);
-      showAlert("Cadastrado com sucesso!", "Sucesso", "success");
+      showAlert("Usuário Cadastrado!", "O novo usuário foi criado com sucesso e já pode acessar o sistema.", "success");
       navigate("/entrar");
     } catch (error) {
       console.error("Erro no cadastro:", error);
-      showAlert("Erro ao cadastrar, verifique os dados.", "Erro", "error");
+      showAlert("Falha no Cadastro", "Não foi possível criar o usuário. Verifique se o e-mail já está em uso ou tente novamente.", "error");
     }
   };
 

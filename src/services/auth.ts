@@ -12,6 +12,28 @@ export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 /**
  * @description Retorna se o usuário está autenticado (se o token existe).
  */
+
+export interface DecodedToken {
+    sub: string; // Subject (geralmente o e-mail)
+    nome?: string; // Nome do usuário (se estiver no token)
+    permissions: string[];
+    exp: number;
+}
+
+export const getDecodedToken = (): DecodedToken | null => {
+    const token = getToken();
+    if (!token) {
+        return null;
+    }
+    try {
+        // Decodifica o token usando a interface
+        return jwtDecode<DecodedToken>(token);
+    } catch (e) {
+        console.error("Erro ao decodificar o token:", e);
+        return null;
+    }
+};
+
 export const estaAutenticado = (): boolean => {
     const token = getToken();
     if (!token) {
