@@ -28,6 +28,16 @@ const listarAlunos = async (pagina: number, termoBusca?: string): Promise<Page<A
     return response.data;
 };
 
+const pesquisar = async (termoBusca: string): Promise<Page<Aluno>> => {
+    const params = new URLSearchParams();
+    params.append('nome', termoBusca);
+    params.append('page', '0');
+    params.append('size', '20');
+
+    const response = await api.get<Page<Aluno>>(`/alunos/all?${params.toString()}`);
+    return response.data;
+};
+
 const listarUmAluno = async (id: number) => {
     const response = await api.get<Aluno>(`/alunos/${id}`);
     return response.data;
@@ -43,4 +53,4 @@ const deletarAluno = async (id: number) => {
     return response.data;
 }
 
-export const alunoService = {cadastrarAluno, importarAlunos, listarAlunos, listarUmAluno, atualizarAluno, deletarAluno};
+export const alunoService = {cadastrarAluno, pesquisar, importarAlunos, listarAlunos, listarUmAluno, atualizarAluno, deletarAluno};

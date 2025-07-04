@@ -1,0 +1,66 @@
+import { ChangeEvent, useEffect, useState } from 'react';
+import { Form } from 'react-bootstrap';
+import api from '../../services/api';
+
+interface TipoDocumento {
+    id: number;
+    nome: string;
+}
+
+type Props = {
+    value: string;
+    onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+    required?: boolean;
+};
+
+const SelectTipoDocumento = (props: Props) => {
+    const [tipos, setTipos] = useState<TipoDocumento[]>([]);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchTiposDocumento = async () => {
+            try {
+                const response = await api.get<TipoDocumento[]>('/tipo-documento');
+
+                setTipos(response.data || []);
+            } catch (error) {
+                console.error("Erro ao buscar os tipos de documento:", error);
+                setErro("Não foi possível carregar os tipos.");
+                setTipos([]);
+            } finally {
+                setCarregando(false);
+            }
+        };
+
+        fetchTiposDocumento();
+    }, []);
+
+    return (
+        <Form.Group className="mb-3" controlId="tipoDocumento">
+            <Form.Label>Tipo de Documento</Form.Label>
+            <Form.Control
+                as="select"
+                name="tipoDocumento"
+                value={props.value}
+                onChange={props.onChange}
+                disabled={carregando || !!erro}
+                required={props.required}
+            >
+                <option value="">
+                    {carregando && "Carregando..."}
+                    {erro && erro}
+                    {!carregando && !erro && "Selecione o tipo de documento"}
+                </option>
+
+                {!carregando && !erro && tipos.map(tipo => (
+                    <option key={tipo.id} value={tipo.nome}>
+                        {tipo.nome}
+                    </option>
+                ))}
+            </Form.Control>
+        </Form.Group>
+    );
+};
+
+export default SelectTipoDocumento;
