@@ -16,14 +16,12 @@ api.interceptors.request.use(
     (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
         const token = getToken();
         if (token) {
-            // Usa o método .set() para adicionar o cabeçalho de autorização
             config.headers.set('Authorization', `Bearer ${token}`);
         }
         return config;
     }
 );
 
-// Interceptor de Resposta
 api.interceptors.response.use(
     (response: AxiosResponse) => {
         return response;

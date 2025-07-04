@@ -1,8 +1,10 @@
 import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { Button, CardLink, Col, Container, Form, Image, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, } from "react-router-dom";
 import { login } from "../services/auth";
 import api from "../services/api";
+import { useAlert } from "../hooks/useAlert";
+import axios from "axios";
 
 interface User {
   email: string,
@@ -22,6 +24,7 @@ interface LoginApiResponse {
 const Login = (): ReactElement => {
   const [email, setEmail] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
+  const { showAlert } = useAlert();
 
   const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value);
@@ -40,19 +43,25 @@ const Login = (): ReactElement => {
     }
 
     try {
-      
         const response = await api.post<LoginApiResponse>('/user/login', userPayload);
-
         const { token, permissions } = response.data;
-
         login(token, permissions);
-
-        alert("Logado com sucesso!");
+        showAlert("Logado com sucesso!", "Bem-vindo(a)!", "success");
+        
   
-        window.location.href = "/"; 
+        setTimeout(() => {
+  
+          window.location.href = '/';
+        }, 1500); 
+
     } catch (error) {
         console.error("Falha no login:", error);
-        alert("Erro ao fazer login. Verifique suas credenciais.");
+
+        let errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
+        if (axios.isAxiosError(error) && error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        }
+        alert("Erro no login")
     }
   };
 
@@ -74,12 +83,12 @@ const Login = (): ReactElement => {
 
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>Email</Form.Label>
-              <Form.Control onChange={handleEmailChange} type="email" placeholder="Digite seu email" required/>
+              <Form.Control onChange={handleEmailChange} value={email} type="email" placeholder="Digite seu email" required/>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formPassword">
               <Form.Label>Senha</Form.Label>
-              <Form.Control type="password" onChange={handleSenhaChange} placeholder="Digite sua senha" required/>
+              <Form.Control type="password" onChange={handleSenhaChange} value={senha} placeholder="Digite sua senha" required/>
               <CardLink as={Link} to="/esqueci-senha" className="text-white link-underline-opacity-0">Esqueceu a senha?</CardLink>
             </Form.Group>
 

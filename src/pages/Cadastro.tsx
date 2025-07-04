@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, ReactElement, useEffect, useState } from "react
 import { Button, Col, Container, Form, Image, Row } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
-import { useAlert } from "../hooks/userAlert"; 
+import { useAlert } from "../hooks/useAlert"; 
 
 
 interface Permission {

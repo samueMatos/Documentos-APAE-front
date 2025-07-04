@@ -1,8 +1,7 @@
-// src/contexts/AlertContext.tsx
-import { createContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react'; // 1. Importe useRef e useEffect
+import { createContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { AlertModal, AlertType } from '../components/modals/AlertModal';
 
-// Interfaces (sem alterações)
+
 interface AlertState {
   show: boolean;
   message: string;
