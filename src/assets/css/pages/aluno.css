@@ -3,6 +3,11 @@
 }
 
 .thead-azul th {
-  text-align: center;
+  /* text-align: center; */
   color: var(--azul);
+}
+
+.form-label-sm {
+  font-size: 0.85rem;    
+  margin-bottom: 0.2rem;
 }

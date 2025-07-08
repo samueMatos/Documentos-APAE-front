@@ -5,7 +5,6 @@ import Layout from "../components/layout/Layout";
 import HomeAlunos from "../pages/alunos/Home";
 import DocumentosPage from "../pages/documentos/DocumentosPage";
 import DocumentosCadastro from "../pages/documentos/DocumentosCadastro";
-import Aluno from "../pages/alunos/Aluno";
 import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
 import GroupListPage from "../pages/group/GroupListPage";
 import GroupCreatePage from "../pages/group/GroupCreatePage";
@@ -18,12 +17,6 @@ import DocumentosUpdate from "../pages/documentos/DocumentosUpdate";
 import GerenciamentoUsuario from "../pages/usuario/GerenciamentoUsuario";
 import UsuarioUpdate from "../pages/usuario/UsuarioUpdate";
 
-/**
- * @description Rotas privadas da App.
- * @since 25/11/2024
- * @author Lucas Ronchi <@lucas0headshot>
- * @see https://dev.to/franklin030601/route-protection-with-react-router-dom-12gm
- */
 const RotasPrivadas = (): ReactElement => (
     <Routes>
         <Route path="/" element={<Layout />}>
@@ -32,8 +25,6 @@ const RotasPrivadas = (): ReactElement => (
             <Route element={<ProtectedRoute permission="ALUNOS" />}>
                 <Route path="alunos">
                     <Route index element={<HomeAlunos />} />
-                    <Route path="cadastrar" element={<Aluno />} />
-                    <Route path="editar/:id" element={<Aluno />} />
                     <Route path="*" element={<Navigate to="/alunos" replace />} />
                 </Route>
             </Route>

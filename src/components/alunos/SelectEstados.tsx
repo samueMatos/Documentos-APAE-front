@@ -7,6 +7,9 @@ type Props = {
     className?: string;
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
     value: string;
+    size:'sm';
+    required?: boolean;
+    
 }
 
 type Estado = {
@@ -14,11 +17,7 @@ type Estado = {
     nome: string;
 };
 
-/**
- * @description SELECT com Estados do Brasil.
- * @author Lucas Ronchi <@lucas0headshot>
- * @since 12/12/2024
- */
+
 const SelectEstados = (props: Props) => {
     const estados: Estado[] = [
         { abreviacao: "AC", nome: "Acre" },
@@ -52,13 +51,14 @@ const SelectEstados = (props: Props) => {
 
     return (
         <Form.Group controlId={props.controlId} as={Col} className={props.className}>
-            <Form.Label>Estados</Form.Label>
+            <Form.Label className='form-label-sm'>Estado<span className="text-danger">*</span></Form.Label>
             <Form.Control
                 as="select"
                 required={true}
                 name={props.name}
                 onChange={props.onChange}
                 value={props.value}
+                size="sm"
             >
                 <option disabled value="">Selecione um Estado</option>
                 {estados.map((estado, i) => (

@@ -137,7 +137,7 @@ const HomeTipoDocumento = (): ReactElement => {
                 <Alert variant="danger">{erro}</Alert>
             ) : (
                 <Table borderless={true} hover responsive>
-                    <thead className="thead-azul">
+                    <thead className="thead-azul text-center align-middle">
                         <tr>
                             <th></th>
                             <th>Nome</th>
@@ -151,8 +151,8 @@ const HomeTipoDocumento = (): ReactElement => {
                                 <td colSpan={5} className="text-center">Nenhum tipo de documento encontrado.</td>
                             </tr>
                         ) : (
-                            filteredTiposDocumento.map(item => (
-                                <tr key={item.id} className="border border-primary tr-azul">
+                            filteredTiposDocumento.map(item => (    
+                                <tr key={item.id} className="text-center align-middle border border-primary tr-azul">
                                     <td>
                                         <Form.Check 
                                             type="radio" 
