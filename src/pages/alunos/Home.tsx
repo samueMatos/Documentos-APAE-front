@@ -42,21 +42,21 @@ const Home = (): ReactElement => {
         numero: 0, complemento: '', cep: '', ibge: ''
     });
 
-    const buscarDados = useCallback(async () => { setCarregando(true); setErro(false); try { const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca); setPaginaData(resposta); } catch (err: any) { setErro(true); const mensagemErro = err.response?.data || "Erro ao carregar a lista de alunos."; showAlert(mensagemErro, "Erro", "error"); } finally { setCarregando(false); } }, [paginaAtual, termoBusca, showAlert]);
+    const buscarDados = useCallback(async () => { setCarregando(true); setErro(false); try { const resposta = await alunoService.listarAlunos(paginaAtual, termoBusca); setPaginaData(resposta); } catch (err: any) { setErro(true); const mensagemErro = err.response?.data || "Erro ao carregar a lista de alunos."; showAlert(mensagemErro, "Erro!", "error"); } finally { setCarregando(false); } }, [paginaAtual, termoBusca, showAlert]);
     useEffect(() => { const timerId = setTimeout(() => { buscarDados(); }, 300); return () => clearTimeout(timerId); }, [buscarDados]);
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => { const { name, value } = e.target; setDadosForm(prev => ({ ...prev, [name]: value })); };
     const buscarDadosCep = async (cep: string) => { const response = await api.get(`https://viacep.com.br/ws/${cep}/json/`); return response.data; };
     const handleCepBlur = async () => { const cep = dadosForm.cep.replace(/\D/g, ""); if (cep.length === 8) { try { const data = await buscarDadosCep(cep); if (!data.erro) { setDadosForm(prev => ({ ...prev, estado: data.uf, cidade: data.localidade, bairro: data.bairro, rua: data.logradouro, ibge: data.ibge, })); } else { showAlert("CEP não encontrado", "Atenção", "warning"); } } catch (err) { console.log("Erro ao buscar CEP:", err); } } };
     const abrirModalCadastro = () => { setAlunoEmEdicao(null); setDadosForm({ nome: '', dataNascimento: '', cpf: '', matricula: "", isAtivo: true, telefone: '', sexo: '', dataEntrada: '', observacoes: '', endereco: '', estado: '', cidade: '', bairro: '', rua: '', numero: 0, complemento: '', cep: '', ibge: '' }); setModalFormVisivel(true); };
-    const abrirModalEdicao = async (aluno: Aluno) => { setAlunoEmEdicao(aluno); setModalFormVisivel(true); setCarregandoModal(true); try { const response = await alunoService.listarUmAluno(aluno.id!); setDadosForm(response); } catch (error) { showAlert("Erro ao buscar dados do aluno.", "Erro", "error"); fecharModalForm(); } finally { setCarregandoModal(false); } };
+    const abrirModalEdicao = async (aluno: Aluno) => { setAlunoEmEdicao(aluno); setModalFormVisivel(true); setCarregandoModal(true); try { const response = await alunoService.listarUmAluno(aluno.id!); setDadosForm(response); } catch (error) { showAlert("Erro ao buscar dados do aluno.", "Erro!", "error"); fecharModalForm(); } finally { setCarregandoModal(false); } };
     const fecharModalForm = () => setModalFormVisivel(false);
-    const handleSalvar = async () => { try { if (alunoEmEdicao) { await alunoService.atualizarAluno(alunoEmEdicao.id!, dadosForm); showAlert("Aluno atualizado com sucesso!", "Sucesso", "success"); } else { await alunoService.cadastrarAluno(dadosForm); showAlert("Aluno cadastrado com sucesso!", "Sucesso", "success"); } fecharModalForm(); buscarDados(); } catch (error: any) { const msg = error.response?.data || "Erro ao salvar aluno."; showAlert(msg, "Erro", "error"); } };
+    const handleSalvar = async () => { try { if (alunoEmEdicao) { await alunoService.atualizarAluno(alunoEmEdicao.id!, dadosForm); showAlert("Aluno atualizado com sucesso!", "Sucesso", "success"); } else { await alunoService.cadastrarAluno(dadosForm); showAlert("Aluno cadastrado com sucesso!", "Sucesso!", "success"); } fecharModalForm(); buscarDados(); } catch (error: any) { const msg = error.response?.data || "Erro ao salvar aluno."; showAlert(msg, "Erro!", "error"); } };
     const handleInativarClick = (e: MouseEvent, id: number) => { e.stopPropagation(); setAlunoParaInativar(id); setModalInativarVisivel(true); };
-    const handleConfirmarExclusao = async () => { if (!alunoParaInativar) return; try { await alunoService.deletarAluno(alunoParaInativar); showAlert("Aluno inativo com sucesso.", "Aluno Inativo", "success"); buscarDados(); } catch (err) { showAlert("Não foi possível inativar o aluno.", "Erro ao inativar", "error"); } finally { setAlunoParaInativar(null); setModalInativarVisivel(false); } };
+    const handleConfirmarExclusao = async () => { if (!alunoParaInativar) return; try { await alunoService.deletarAluno(alunoParaInativar); showAlert("Aluno inativo com sucesso.", "Aluno Inativo", "success"); buscarDados(); } catch (err) { showAlert("Não foi possível inativar o aluno.", "Erro ao inativar.", "error"); } finally { setAlunoParaInativar(null); setModalInativarVisivel(false); } };
     const handleCancelarExclusao = () => { setAlunoParaInativar(null); setModalInativarVisivel(false); };
     const handleBuscar = (e: ChangeEvent<HTMLInputElement>) => { setTermoBusca(e.target.value); setPaginaAtual(0); };
     const handleBotaoImportar = () => fileInputRef.current?.click();
-    const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => { const files = event.target.files; if (files && files.length > 0) { const arquivoExcel = files[0]; try { await alunoService.importarAlunos(arquivoExcel); showAlert("Planilha importada com sucesso.", "Sucesso", "success"); buscarDados(); } catch (err) { showAlert("Erro ao importar a planilha.", "Erro", "error"); } finally { if (fileInputRef.current) { fileInputRef.current.value = ''; } } } };
+    const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => { const files = event.target.files; if (files && files.length > 0) { const arquivoExcel = files[0]; try { await alunoService.importarAlunos(arquivoExcel); showAlert("Planilha importada com sucesso.", "Sucesso!", "success"); buscarDados(); } catch (err) { showAlert("Erro ao importar a planilha.", "Erro!", "error"); } finally { if (fileInputRef.current) { fileInputRef.current.value = ''; } } } };
 
     const renderizarFormulario = () => (
         <Form>
@@ -66,7 +66,7 @@ const Home = (): ReactElement => {
                     <Form.Group as={Col} md={6} controlId="nome"><Form.Label className="form-label-sm">Nome Completo<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="text" name="nome" value={dadosForm.nome} onChange={handleFormChange} required /></Form.Group>
                     <Form.Group as={Col} md={3} controlId="dataNascimento"><Form.Label className="form-label-sm">Nascimento<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="date" name="dataNascimento" value={dadosForm.dataNascimento ? dadosForm.dataNascimento.split('T')[0] : ''} onChange={handleFormChange} required /></Form.Group>
                     <Form.Group as={Col} md={3} controlId="cpf"><Form.Label className="form-label-sm">CPF<span className="text-danger">*</span></Form.Label><InputMask mask="999.999.999-99" value={dadosForm.cpf} onChange={handleFormChange}>{(inputProps: any) => <Form.Control size="sm" {...inputProps} type="text" name="cpf" required />}</InputMask></Form.Group>
-                    <Form.Group as={Col} md={4} controlId="matricula"><Form.Label className="form-label-sm">Matrícula<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="number" name="matricula" value={dadosForm.matricula || ''} onChange={handleFormChange} required  /></Form.Group>
+                    <Form.Group as={Col} md={4} controlId="matricula"><Form.Label className="form-label-sm">Matrícula<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="number" name="matricula" value={dadosForm.matricula || ''} onChange={handleFormChange} required /></Form.Group>
                     <Form.Group as={Col} md={4} controlId="telefone"><Form.Label className="form-label-sm">Telefone<span className="text-danger">*</span></Form.Label><InputMask mask="(99) 99999-9999" value={dadosForm.telefone} onChange={handleFormChange}>{(inputProps: any) => <Form.Control size="sm" {...inputProps} type="text" name="telefone" required />}</InputMask></Form.Group>
                     <Form.Group as={Col} md={4} controlId="sexo"><Form.Label className="form-label-sm">Sexo<span className="text-danger">*</span></Form.Label><Form.Select size="sm" name="sexo" value={dadosForm.sexo} onChange={handleFormChange} required><option value="">Selecione...</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option> </Form.Select></Form.Group>
 
@@ -100,7 +100,23 @@ const Home = (): ReactElement => {
         <Container fluid>
 
             <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4 gap-3">
-                <div className="flex-grow-1"><h2 className="text-primary">Alunos</h2><Form.Control type="text" placeholder="Pesquisar por Nome, Matrícula ou CPF...   " value={termoBusca} onChange={handleBuscar} className="border border-primary rounded-1" style={{ maxWidth: '400px' }} /></div>
+                <div className="flex-grow-1"><h2 className="text-primary">Alunos</h2>
+                    <div className="d-flex align-items-center gap-2" style={{ maxWidth: '450px' }}>
+                        <Form.Control
+                            type="text"
+                            placeholder="Pesquisar por Nome, Matrícula ou CPF..."
+                            value={termoBusca}
+                            onChange={handleBuscar}
+                            className="border-primary rounded-1"
+                        />
+                        <Botao
+                            variant="outline-primary"
+                            onClick={() => buscarDados()}
+                            icone={<Icone nome="refresh" />}
+                            title="Recarregar dados"
+                        />
+                    </div>
+                </div>
                 <div className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 ">
                     <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} accept=".xls, .xlsx" />
                     <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={abrirModalCadastro} texto="Cadastrar" />

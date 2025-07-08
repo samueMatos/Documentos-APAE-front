@@ -10,7 +10,6 @@ import GroupListPage from "../pages/group/GroupListPage";
 import GroupCreatePage from "../pages/group/GroupCreatePage";
 import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
-import FormTipoDocumento from "../pages/tipo-documento/FormTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
 import Cadastro from "../pages/usuario/CadastroUsuario";
 import DocumentosUpdate from "../pages/documentos/DocumentosUpdate";
@@ -33,8 +32,6 @@ const RotasPrivadas = (): ReactElement => (
             <Route element={<ProtectedRoute permission="TIPO_DOCUMENTO" />}>
                 <Route path="tipo-documento">
                     <Route index element={<HomeTipoDocumento/>} />
-                    <Route path="novo" element={<FormTipoDocumento/>} />
-                    <Route path="editar/:id" element={<FormTipoDocumento/>} />
                     <Route path="*" element={<Navigate to="/tipo-documento" replace />} />
                 </Route>
             </Route>
