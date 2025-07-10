@@ -1,16 +1,23 @@
-interface Documentos {
+
+interface AlunoSimplificado {
     id: number;
     nome: string;
-    dataUpload: string;
-    dataDownload?: string;
-    dataUpdate?: string;
-    tipoDocumento: string;
-    tipoArquivo: string;
-    aluno: { id: number; nome: string, cpf: string, deficiencia: string };
-    downloadedBy: { id: number; nome: string };
-    uploadedBy: { id: number; nome: string };
-    prevVersion: { id: number; titulo: string };
-    isLast: boolean;
 }
 
-export default Documentos
+interface TipoDocumentoSimplificado {
+    id: number;
+    nome: string;
+}
+
+
+export interface Documento {
+    id: number;
+    titulo: string;                  
+    dataUpload: string;
+    dataDocumento?: string;              
+    aluno?: AlunoSimplificado;       
+    tipoDocumento?: TipoDocumentoSimplificado;
+    tipoConteudo?: string;             
+    documento?: string;  
+             
+}

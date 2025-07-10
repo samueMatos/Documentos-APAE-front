@@ -3,8 +3,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
 import Layout from "../components/layout/Layout";
 import HomeAlunos from "../pages/alunos/Home";
-import DocumentosPage from "../pages/documentos/DocumentosPage";
-import DocumentosCadastro from "../pages/documentos/DocumentosCadastro";
 import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
 import GroupListPage from "../pages/group/GroupListPage";
 import GroupCreatePage from "../pages/group/GroupCreatePage";
@@ -12,9 +10,9 @@ import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
 import Cadastro from "../pages/usuario/CadastroUsuario";
-import DocumentosUpdate from "../pages/documentos/DocumentosUpdate";
 import GerenciamentoUsuario from "../pages/usuario/GerenciamentoUsuario";
 import UsuarioUpdate from "../pages/usuario/UsuarioUpdate";
+import HomeDocumentos from "../pages/documentos/HomeDocumentos";
 
 const RotasPrivadas = (): ReactElement => (
     <Routes>
@@ -37,9 +35,7 @@ const RotasPrivadas = (): ReactElement => (
             </Route>
             
             <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
-            <Route path="documentos" element={<DocumentosPage />} />
-            <Route path="cadastrar" element={<DocumentosCadastro />} />
-            <Route path="cadastrar/:id" element={<DocumentosUpdate />} />
+            <Route path="documentos" element={<HomeDocumentos />} />
             </Route>
 
 

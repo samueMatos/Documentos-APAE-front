@@ -247,7 +247,11 @@ const HomeTipoDocumento = (): ReactElement => {
 
             <ModalGenerico
                 visivel={modalFormVisivel}
-                titulo={itemEmEdicao ? "Editar tipo de documento" : "Cadastrar tipo de documento"}
+                titulo={
+                    itemEmEdicao
+                        ? <> <Icone nome="pencil-square" className="me-2" /> Editar tipo de documento </>
+                        : <> <Icone nome="plus-square" className="me-2" /> Cadastrar novo tipo de documento </>
+                }
                 conteudo={renderizarFormulario()}
                 textoConfirmar="Salvar"
                 textoCancelar="Cancelar"

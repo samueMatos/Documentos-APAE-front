@@ -104,7 +104,7 @@ const Home = (): ReactElement => {
                     <div className="d-flex align-items-center gap-2" style={{ maxWidth: '450px' }}>
                         <Form.Control
                             type="text"
-                            placeholder="Pesquisar por Nome, Matrícula ou CPF..."
+                            placeholder="Pesquisar por nome, matrícula ou CPF..."
                             value={termoBusca}
                             onChange={handleBuscar}
                             className="border-primary rounded-1"

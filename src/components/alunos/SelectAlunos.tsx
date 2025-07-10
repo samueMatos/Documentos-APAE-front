@@ -18,17 +18,16 @@ const SelectAlunos = ({ value, onAlunoSelect, required, disabled }: SelectAlunos
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (termoBusca.length < 2) {
+        if (termoBusca.length < 2 || !mostrarResultados) {
             setResultados([]);
             return;
         }
+        
         const timer = setTimeout(() => {
             setCarregando(true);
-            alunoService.pesquisar(termoBusca)
+            alunoService.listarAlunos(0,termoBusca)
                 .then(response => {
-
                     console.log("Resposta da API de busca de alunos:", response);
-
                     if (response && Array.isArray(response.content)) {
                         setResultados(response.content);
                     } else {
@@ -44,13 +43,16 @@ const SelectAlunos = ({ value, onAlunoSelect, required, disabled }: SelectAlunos
                     setCarregando(false);
                 });
         }, 500);
+        
         return () => clearTimeout(timer);
-    }, [termoBusca]);
+    }, [termoBusca, mostrarResultados]); 
 
     useEffect(() => {
         if (value && !termoBusca) {
             alunoService.listarUmAluno(value).then(aluno => {
-                setTermoBusca(aluno.nome);
+                if (aluno) {
+                    setTermoBusca(aluno.nome);
+                }
             });
         }
     }, [value]);
@@ -85,7 +87,7 @@ const SelectAlunos = ({ value, onAlunoSelect, required, disabled }: SelectAlunos
             <Form.Label>Aluno</Form.Label>
             <Form.Control
                 type="text"
-                placeholder="Digite o nome do aluno para buscar..."
+                placeholder="Digite o nome, matrícula ou CPF do aluno para buscar..."
                 value={termoBusca}
                 onChange={handleChangeBusca}
                 onFocus={() => setMostrarResultados(true)}
@@ -96,7 +98,7 @@ const SelectAlunos = ({ value, onAlunoSelect, required, disabled }: SelectAlunos
             {mostrarResultados && termoBusca.length > 1 && (
                 <ListGroup style={{ position: 'absolute', zIndex: 1000, width: '100%', maxHeight: '200px', overflowY: 'auto', borderTop: 'none' }}>
                     {carregando && <ListGroup.Item><Spinner as="span" animation="border" size="sm" /> Carregando...</ListGroup.Item>}
-                    {!carregando && resultados.length === 0 && <ListGroup.Item>Nenhum aluno encontrado.</ListGroup.Item>}
+                    {!carregando && resultados.length === 0 && termoBusca.length > 1 && <ListGroup.Item>Nenhum aluno encontrado.</ListGroup.Item>}
                     {!carregando && resultados.map(aluno => (
                         <ListGroup.Item key={aluno.id} action onClick={() => handleSelecionarAluno(aluno)}>
                             {aluno.nome}

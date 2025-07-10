@@ -1,4 +1,4 @@
-import  { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { Form } from 'react-bootstrap';
 import api from '../../services/api';
 
@@ -7,14 +7,12 @@ interface TipoDocumento {
     nome: string;
 }
 
-
 type Props = {
-    name: string; 
+    name: string;
     value: string;
-    onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void; 
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
     required?: boolean;
 };
-
 
 const SelectTipoDocumento = ({ name, value, onChange, required }: Props) => {
     const [tipos, setTipos] = useState<TipoDocumento[]>([]);
@@ -24,8 +22,15 @@ const SelectTipoDocumento = ({ name, value, onChange, required }: Props) => {
     useEffect(() => {
         const fetchTiposDocumento = async () => {
             try {
-                const response = await api.get<TipoDocumento[]>('/tipo-documento');
-                setTipos(response.data || []);
+                const response = await api.get<TipoDocumento[]>('/tipo-documento/ativos');
+
+                if (Array.isArray(response.data)) {
+                    setTipos(response.data);
+                } else {
+                    setErro("Formato de resposta inválido.");
+                    setTipos([]);
+                }
+
             } catch (error) {
                 console.error("Erro ao buscar os tipos de documento:", error);
                 setErro("Não foi possível carregar os tipos.");
@@ -43,7 +48,7 @@ const SelectTipoDocumento = ({ name, value, onChange, required }: Props) => {
             <Form.Label>Tipo de Documento</Form.Label>
             <Form.Control
                 as="select"
-                name={name} 
+                name={name}
                 value={value}
                 onChange={onChange}
                 disabled={carregando || !!erro}
@@ -55,7 +60,7 @@ const SelectTipoDocumento = ({ name, value, onChange, required }: Props) => {
                     {!carregando && !erro && "Selecione o tipo de documento"}
                 </option>
 
-                {!carregando && !erro && tipos.map(tipo => (
+                {tipos.map(tipo => (
                     <option key={tipo.id} value={tipo.nome}>
                         {tipo.nome}
                     </option>

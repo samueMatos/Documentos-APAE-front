@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Col, Form } from 'react-bootstrap'
 import api from '../../services/api'
-import Documentos from '../../models/Documentos'
+import { Documento } from '../../models/Documentos'
 
 
 type Props = {
@@ -14,10 +14,10 @@ type Props = {
 
 const SelectDocumentos = (props: Props) => {
 
-    const [documentos, setDocumentos] = useState<Documentos[]>([]);
+    const [documentos, setDocumentos] = useState<Documento[]>([]);
 
     const fetchDocumentos = async () => {
-        const response = await api.get<Documentos[]>(`/documentos/list?id=${props.idAluno}`)
+        const response = await api.get<Documento[]>(`/documentos/list?id=${props.idAluno}`)
 
         setDocumentos(response.data);
     }
@@ -32,7 +32,7 @@ const SelectDocumentos = (props: Props) => {
             <Form.Control as="select" name={props.nome} onChange={props.onChange}>
                 <option value={0}>Nenhum documento a ser Vinculado</option>
                 {documentos.map(documento => {
-                    return <option key={documento.id} value={documento.id}>{documento.nome}</option>
+                    return <option key={documento.id} value={documento.id}>{documento.titulo}</option>
                 })}
             </Form.Control>
         </Form.Group>
