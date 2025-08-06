@@ -3,15 +3,12 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
 import Layout from "../components/layout/Layout";
 import HomeAlunos from "../pages/alunos/Home";
-import DetalhesUsuario from "../pages/usuario/DetalhesUsuario";
 import GroupListPage from "../pages/group/GroupListPage";
 import GroupCreatePage from "../pages/group/GroupCreatePage";
 import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
-import Cadastro from "../pages/usuario/CadastroUsuario";
-import GerenciamentoUsuario from "../pages/usuario/GerenciamentoUsuario";
-import UsuarioUpdate from "../pages/usuario/UsuarioUpdate";
+import HomeUsuario from "../pages/usuario/HomeUsuario"; // Importa o novo componente
 import HomeDocumentos from "../pages/documentos/HomeDocumentos";
 
 const RotasPrivadas = (): ReactElement => (
@@ -26,7 +23,6 @@ const RotasPrivadas = (): ReactElement => (
                 </Route>
             </Route>
 
-        
             <Route element={<ProtectedRoute permission="TIPO_DOCUMENTO" />}>
                 <Route path="tipo-documento">
                     <Route index element={<HomeTipoDocumento/>} />
@@ -35,15 +31,11 @@ const RotasPrivadas = (): ReactElement => (
             </Route>
             
             <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
-            <Route path="documentos" element={<HomeDocumentos />} />
+                <Route path="documentos" element={<HomeDocumentos />} />
             </Route>
 
-
             <Route element={<ProtectedRoute permission="GERENCIAR_USUARIO" />}>
-            <Route path="usuario" element={<DetalhesUsuario />} />
-            <Route path="cadastro" element={<Cadastro />} />
-            <Route path="usuario/list" element={<GerenciamentoUsuario />} />
-            <Route path="usuario/editar/:id" element={<UsuarioUpdate />} />
+                <Route path="usuarios" element={<HomeUsuario />} />
             </Route>
 
             <Route element={<ProtectedRoute permission="GRUPOS_PERMISSOES" />}>

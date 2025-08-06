@@ -148,7 +148,7 @@ const Home = (): ReactElement => {
         title: "Gerenciar Usuários",
         description: "Visualize os usuários do sistema, concedendo ou revogando permissões.",
         icon: "fas fa-user-cog",
-        link: "cadastro",
+        link: "usuarios",
         permission: ["GERENCIAR_USUARIO"],
     },
     {

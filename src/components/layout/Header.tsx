@@ -52,14 +52,12 @@ const Header = (): ReactElement => {
             ]
         },
         { 
-            text: "Usuários", 
-            icon: "fa-solid fa-users", 
+            text: "Administração", 
+            icon: "fa-solid fa-shield-halved", 
             permissions: ["GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"],
             subItems: [
-                { path: "/usuario/list", text: "Gerenciamento de Usuários", icon: "fas fa-user-cog", permissions: ["GERENCIAR_USUARIO"] },
-                { path: "/admin/grupos", text: "Grupos de Usuários", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
-                { path: "/cadastro", text: "Cadastrar Usuário", icon: "fa-solid fa-user-plus", permissions: ["GERENCIAR_USUARIO"] },
-                
+                { path: "/usuarios", text: "Gerenciar Usuários", icon: "fas fa-user-cog", permissions: ["GERENCIAR_USUARIO"] },
+                { path: "/admin/grupos", text: "Grupos e Permissões", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
             ]
         },
     ];
