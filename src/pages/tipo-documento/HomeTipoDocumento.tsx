@@ -172,7 +172,13 @@ const HomeTipoDocumento = (): ReactElement => {
                 <Form.Group controlId="validade">
                     <Form.Label className="form-label-md">Prazo de vigência <span className="text-danger">*</span></Form.Label>
                     <InputGroup size="md">
-                        <Form.Control type="number" name="valorValidade" value={dadosForm.valorValidade} onChange={handleFormChange} min="1" required />
+                        <Form.Control type="number" name="valorValidade" value={dadosForm.valorValidade} onChange={e => {
+                            const value = e.target.value;
+
+                            const _dadosForm = {...dadosForm};
+                            _dadosForm.valorValidade = Number(value.replace(/[^0-9]/g, ''));
+                            setDadosForm(_dadosForm);
+                        }} min="1" required />
                         <Form.Select name="unidadeValidade" value={dadosForm.unidadeValidade} onChange={handleFormChange} style={{ maxWidth: "120px" }}>
                             <option value="Dias">Dias</option>
                             <option value="Meses">Meses</option>
