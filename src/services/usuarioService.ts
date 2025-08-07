@@ -29,7 +29,7 @@ export const usuarioService = {
             page: pagina,
             size: 10,
             sort: 'nome,asc',
-            ...(termoBusca && { nome: termoBusca })
+            ...(termoBusca && { termoBusca: termoBusca })
         };
         const response = await api.get<Page<Usuario>>('/user/list', { params });
         return response.data;

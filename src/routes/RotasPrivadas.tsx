@@ -3,13 +3,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
 import Layout from "../components/layout/Layout";
 import HomeAlunos from "../pages/alunos/Home";
-import GroupListPage from "../pages/group/GroupListPage";
-import GroupCreatePage from "../pages/group/GroupCreatePage";
-import GroupEditPage from "../pages/group/GroupEditPage";
 import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
-import HomeUsuario from "../pages/usuario/HomeUsuario"; // Importa o novo componente
+import HomeUsuario from "../pages/usuario/HomeUsuario";
 import HomeDocumentos from "../pages/documentos/HomeDocumentos";
+import HomeGroup from "../pages/group/HomeGroup";
 
 const RotasPrivadas = (): ReactElement => (
     <Routes>
@@ -38,11 +36,10 @@ const RotasPrivadas = (): ReactElement => (
                 <Route path="usuarios" element={<HomeUsuario />} />
             </Route>
 
+            {/* Bloco de rotas de grupo ATUALIZADO */}
             <Route element={<ProtectedRoute permission="GRUPOS_PERMISSOES" />}>
                 <Route path="admin/grupos">
-                    <Route index element={<GroupListPage />} />
-                    <Route path="novo" element={<GroupCreatePage />} />
-                    <Route path="editar/:id" element={<GroupEditPage />} />
+                    <Route index element={<HomeGroup />} />
                     <Route path="*" element={<Navigate to="/admin/grupos" replace />} />
                 </Route>
             </Route>
