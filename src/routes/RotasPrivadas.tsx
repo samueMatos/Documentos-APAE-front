@@ -7,6 +7,8 @@ import HomeTipoDocumento from "../pages/tipo-documento/HomeTipoDocumento";
 import ProtectedRoute from "./ProtectedRoute";
 import HomeUsuario from "../pages/usuario/HomeUsuario";
 import HomeDocumentos from "../pages/documentos/HomeDocumentos";
+import DocsColaboradores from "../pages/documentos/DocsColaboradores";
+import DocsInstituicao from "../pages/documentos/DocsInstituicao";
 import HomeGroup from "../pages/group/HomeGroup";
 
 const RotasPrivadas = (): ReactElement => (
@@ -29,7 +31,12 @@ const RotasPrivadas = (): ReactElement => (
             </Route>
             
             <Route element={<ProtectedRoute permission="DOCUMENTOS" />}>
-                <Route path="documentos" element={<HomeDocumentos />} />
+                <Route path="documentos">
+                    <Route index element={<Navigate to="alunos" replace />} />
+                    <Route path="alunos" element={<HomeDocumentos />} />
+                    <Route path="colaboradores" element={<DocsColaboradores />} />
+                    <Route path="instituicao" element={<DocsInstituicao />} />
+                </Route>
             </Route>
 
             <Route element={<ProtectedRoute permission="GERENCIAR_USUARIO" />}>

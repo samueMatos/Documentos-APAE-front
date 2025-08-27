@@ -16,6 +16,7 @@ import Botao from "../../components/common/Botao";
 import ModalGenerico from "../../components/modals/ModalGenerico";
 import { useAlert } from "../../hooks/useAlert";
 import formatarData from "../../helpers/formatarData";
+import DocumentGeneratorModal from "../../components/documentos/ModalGerarDoc.tsx";
 
 
 interface FormState {
@@ -28,10 +29,9 @@ interface FormState {
 const initialFormState: FormState = {
     alunoId: null,
     tipoDocumento: '',
-    dataDocumento: '', // NOVO CAMPO
+    dataDocumento: '',
     file: null,
 };
-
 
 const HomeDocumentos = (): ReactElement => {
     const { showAlert } = useAlert();
@@ -49,6 +49,7 @@ const HomeDocumentos = (): ReactElement => {
     const [modalVisualizarVisivel, setModalVisualizarVisivel] = useState(false);
     const [documentoParaVisualizar, setDocumentoParaVisualizar] = useState<Documento | null>(null);
     const [documentoParaInativar, setDocumentoParaInativar] = useState<number | null>(null);
+    const [showGeneratorModal, setShowGeneratorModal] = useState(false);
     const [modalInativarVisivel, setModalInativarVisivel] = useState<boolean>(false);
 
     const buscarDados = useCallback(async () => {
@@ -118,7 +119,7 @@ const HomeDocumentos = (): ReactElement => {
             if (documentoEmEdicao) {
                 const dadosParaEnviar = new FormData();
                 dadosParaEnviar.append("tipoDocumento", dadosForm.tipoDocumento);
-                dadosParaEnviar.append("dataDocumento", dadosForm.dataDocumento); 
+                dadosParaEnviar.append("dataDocumento", dadosForm.dataDocumento);
                 if (dadosForm.file) {
                     dadosParaEnviar.append("file", dadosForm.file);
                 }
@@ -137,7 +138,7 @@ const HomeDocumentos = (): ReactElement => {
                 }
                 const dadosParaEnviar = new FormData();
                 dadosParaEnviar.append("tipoDocumento", dadosForm.tipoDocumento);
-                dadosParaEnviar.append("dataDocumento", dadosForm.dataDocumento); // Envia a data
+                dadosParaEnviar.append("dataDocumento", dadosForm.dataDocumento);
                 dadosParaEnviar.append("file", dadosForm.file);
                 await documentoService.cadastrar(dadosForm.alunoId, dadosParaEnviar);
                 showAlert("Documento cadastrado com sucesso!", "Sucesso!", "success");
@@ -202,16 +203,17 @@ const HomeDocumentos = (): ReactElement => {
 
     return (
         <Container fluid>
+            <h1 className="text-primary mb-4">Documentos dos Alunos</h1>
             <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4 gap-3">
                 <div className="flex-grow-1">
-                    <h2 className="text-primary">Documentos</h2>
                     <div className="d-flex align-items-center gap-2" style={{ maxWidth: '450px' }}>
                         <Form.Control type="text" placeholder="Pesquisar por nome, matrícula ou CPF..." value={termoBusca} onChange={(e) => { setTermoBusca(e.target.value); setPaginaAtual(0); }} className="border-primary rounded-1" />
                         <Botao variant="outline-primary" onClick={() => buscarDados()} icone={<Icone nome="refresh" />} title="Recarregar dados" />
                     </div>
                 </div>
                 <div className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2">
-                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={abrirModalCadastro} texto="Cadastrar" />
+                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={abrirModalCadastro} texto="Cadastrar" /> 
+                    <Botao variant="success" onClick={() => setShowGeneratorModal(true)} texto="Gerar PDF" icone={<Icone nome="file-earmark-pdf" />} />
                 </div>
             </div>
 
@@ -284,6 +286,14 @@ const HomeDocumentos = (): ReactElement => {
                 textoCancelar="Cancelar"
                 aoCancelar={() => setModalInativarVisivel(false)}
             />
+
+            <DocumentGeneratorModal 
+                show={showGeneratorModal}
+                onHide={() => setShowGeneratorModal(false)}
+                onSuccess={buscarDados}
+                mode="aluno"
+            />
+
             <Modal show={modalVisualizarVisivel} onHide={() => setModalVisualizarVisivel(false)} size="xl" centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{documentoParaVisualizar?.titulo || "Carregando..."}</Modal.Title>

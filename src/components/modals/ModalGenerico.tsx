@@ -1,5 +1,3 @@
-// Em src/components/modals/ModalGenerico.tsx
-
 import React, { ReactNode, ReactElement } from "react";
 import { Modal, Button } from "react-bootstrap";
 
@@ -17,6 +15,8 @@ export interface ModalGenericoProps {
   closeButtonVariant?: 'white'; 
   aoConfirmar?: () => void;
   aoCancelar?: () => void;
+  confirmarDisabled?: boolean;
+  botoesFooter?: ReactNode;
 }
 
 const ModalGenerico = ({
@@ -33,6 +33,8 @@ const ModalGenerico = ({
   closeButtonVariant,
   aoConfirmar,
   aoCancelar,
+  confirmarDisabled,
+  botoesFooter,
 }: ModalGenericoProps): ReactElement => (
   <Modal show={visivel} onHide={aoCancelar} centered size={size}>
     {titulo && (
@@ -46,8 +48,14 @@ const ModalGenerico = ({
       {conteudo}
     </Modal.Body>
     <Modal.Footer>
-        {aoCancelar && <Button variant="secondary" onClick={aoCancelar}>{textoCancelar}</Button>}
-        {aoConfirmar && <Button variant="primary" onClick={aoConfirmar}>{textoConfirmar}</Button>}
+        {botoesFooter ? (
+            botoesFooter
+        ) : (
+            <>
+                {aoCancelar && <Button variant="secondary" onClick={aoCancelar}>{textoCancelar}</Button>}
+                {aoConfirmar && <Button variant="primary" onClick={aoConfirmar} disabled={confirmarDisabled}>{textoConfirmar}</Button>}
+            </>
+        )}
     </Modal.Footer>
   </Modal>
 );

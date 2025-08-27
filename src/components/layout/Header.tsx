@@ -1,5 +1,5 @@
 import { ReactElement, useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { Nav, Button, Modal, Form, Alert, Container, Navbar, NavDropdown } from "react-bootstrap";
+import { Nav, Button, Modal, Form, Alert, Container, Navbar, NavDropdown, Dropdown } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import { logout, hasAnyPermission, getDecodedToken } from "../../services/auth";
 import api from "../../services/api";
@@ -47,7 +47,16 @@ const Header = (): ReactElement => {
             icon: "fa-solid fa-folder-open", 
             permissions: ["DOCUMENTOS", "TIPO_DOCUMENTO"],
             subItems: [
-                { path: "/documentos", text: "Gerenciar Documentos", icon: "fa-solid fa-folder-open", permissions: ["DOCUMENTOS"] },
+                {
+                    text: "Gerenciar Documentos",
+                    icon: "fa-solid fa-folder-open",
+                    permissions: ["DOCUMENTOS"],
+                    subItems: [
+                        { path: "/documentos/alunos", text: "Alunos", icon: "fa-solid fa-user-graduate", permissions: ["DOCUMENTOS"] },
+                        { path: "/documentos/colaboradores", text: "Colaboradores", icon: "fa-solid fa-user-tie", permissions: ["DOCUMENTOS"] },
+                        { path: "/documentos/instituicao", text: "Instituição", icon: "fa-solid fa-building-columns", permissions: ["DOCUMENTOS"] },
+                    ]
+                },
                 { path: "/tipo-documento", text: "Tipos de Documento", icon: "fa-solid fa-file-alt", permissions: ["TIPO_DOCUMENTO"] },
             ]
         },
@@ -120,15 +129,40 @@ const Header = (): ReactElement => {
                     id={`nav-dropdown-${link.text}`}
                     key={link.text}
                 >
-                    {link.subItems.map(subItem =>
-                        hasAnyPermission(subItem.permissions) && (
+                    {link.subItems.map(subItem => {
+                        if (!hasAnyPermission(subItem.permissions)) {
+                            return null;
+                        }
+
+                        if (subItem.subItems) {
+                            return (
+                                <Dropdown drop="end" key={subItem.text}>
+                                    <Dropdown.Toggle as="a" className="dropdown-item">
+                                        <i className={`${subItem.icon} me-2 fa-fw`}></i>{subItem.text}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {subItem.subItems.map(nestedItem =>
+                                            hasAnyPermission(nestedItem.permissions) && (
+                                                <LinkContainer to={nestedItem.path!} key={nestedItem.path}>
+                                                    <Dropdown.Item>
+                                                        <i className={`${nestedItem.icon} me-2 fa-fw`}></i>{nestedItem.text}
+                                                    </Dropdown.Item>
+                                                </LinkContainer>
+                                            )
+                                        )}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            );
+                        }
+
+                        return (
                             <LinkContainer to={subItem.path!} key={subItem.path}>
                                 <NavDropdown.Item>
                                     <i className={`${subItem.icon} me-2 fa-fw`}></i>{subItem.text}
                                 </NavDropdown.Item>
                             </LinkContainer>
-                        )
-                    )}
+                        );
+                    })}
                 </NavDropdown>
             );
         }

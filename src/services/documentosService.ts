@@ -46,5 +46,23 @@ export const documentoService = {
    atualizar: (id: number, formData: FormData): Promise<any> => {
         return api.put(`/documentos/update/${id}`, formData);
     }
+    ,
+
+    gerarPdfSimples: (dados: { textoCabecalho: string, textoCorpo: string, textoRodape: string, colaborador: string, aluno: string, instituicao: string }): Promise<Blob> => {
+
+        const dadosParaBackend = {
+            textoCabecalho: dados.textoCabecalho,
+            texto: dados.textoCorpo,
+            textoRodape: dados.textoRodape,
+            colaborador: dados.colaborador,
+            aluno: dados.aluno,
+            instituicao: dados.instituicao
+
+        };
+
+        return api.post('/documentos/gerar-pdf', dadosParaBackend, {
+            responseType: 'blob',
+        }).then(response => response.data);
+    }
 
 };
