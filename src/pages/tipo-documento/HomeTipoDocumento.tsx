@@ -32,6 +32,9 @@ interface DadosFormTipoDoc {
     nome: string;
     valorValidade: number;
     unidadeValidade: UnidadeTempo;
+    guardaPermanente: boolean;
+
+
 }
 
 const HomeTipoDocumento = (): ReactElement => {

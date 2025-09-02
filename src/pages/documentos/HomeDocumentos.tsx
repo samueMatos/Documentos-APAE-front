@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState, useCallback, MouseEvent } from "react";
+import { ReactElement, useEffect, useState, useCallback, Fragment } from "react";
 import { Button, Container, Form, Spinner, Table, Modal } from "react-bootstrap";
 import '../../assets/css/pages/aluno.css';
 
@@ -7,6 +7,7 @@ import { Page } from "../../models/Page";
 import { Documento } from "../../models/Documentos";
 import Aluno from "../../models/Aluno";
 import { documentoService } from "../../services/documentosService";
+import { alunoService } from "../../services/alunoService";
 
 
 import SelectAlunos from "../../components/alunos/SelectAlunos";
@@ -35,41 +36,44 @@ const initialFormState: FormState = {
 
 const HomeDocumentos = (): ReactElement => {
     const { showAlert } = useAlert();
+    const [alunosData, setAlunosData] = useState<Page<Aluno> | null>(null);
+    const [paginaAlunosAtual, setPaginaAlunosAtual] = useState(0);
+    const [termoBuscaAluno, setTermoBuscaAluno] = useState('');
+    const [carregandoAlunos, setCarregandoAlunos] = useState<boolean>(true);
 
-    const [paginaData, setPaginaData] = useState<Page<Documento> | null>(null);
-    const [paginaAtual, setPaginaAtual] = useState(0);
-    const [termoBusca, setTermoBusca] = useState('');
-    const [carregando, setCarregando] = useState<boolean>(true);
+    const [expandedAlunoId, setExpandedAlunoId] = useState<number | null>(null);
+    const [documentosPorAluno, setDocumentosPorAluno] = useState<{ [alunoId: number]: Page<Documento> | null }>({});
+    const [loadingDocumentos, setLoadingDocumentos] = useState<boolean>(false);
+    const [termoBuscaDocumento, setTermoBuscaDocumento] = useState('');
+    const [paginaDocumentosAtual, setPaginaDocumentosAtual] = useState(0);
 
     const [modalFormVisivel, setModalFormVisivel] = useState<boolean>(false);
     const [dadosForm, setDadosForm] = useState<FormState>(initialFormState);
-    const [documentoEmEdicao, setDocumentoEmEdicao] = useState<Documento | null>(null);
     const [carregandoModal, setCarregandoModal] = useState<boolean>(false);
+    const [documentoEmEdicao, setDocumentoEmEdicao] = useState<Documento | null>(null);
 
     const [modalVisualizarVisivel, setModalVisualizarVisivel] = useState(false);
     const [documentoParaVisualizar, setDocumentoParaVisualizar] = useState<Documento | null>(null);
-    const [documentoParaInativar, setDocumentoParaInativar] = useState<number | null>(null);
     const [showGeneratorModal, setShowGeneratorModal] = useState(false);
-    const [modalInativarVisivel, setModalInativarVisivel] = useState<boolean>(false);
 
-    const buscarDados = useCallback(async () => {
-        setCarregando(true);
+    const buscarAlunos = useCallback(async () => {
+        setCarregandoAlunos(true);
         try {
-            const resposta = await documentoService.listar(paginaAtual, termoBusca);
-            setPaginaData(resposta);
+            const resposta = await alunoService.listarAlunos(paginaAlunosAtual, termoBuscaAluno);
+            setAlunosData(resposta);
         } catch (err: any) {
-            showAlert(err.response?.data || "Erro ao carregar documentos.", "Erro!", "error");
+            showAlert(err.response?.data?.message || "Erro ao carregar alunos.", "Erro!", "error");
         } finally {
-            setCarregando(false);
+            setCarregandoAlunos(false);
         }
-    }, [paginaAtual, termoBusca, showAlert]);
+    }, [paginaAlunosAtual, termoBuscaAluno, showAlert]);
 
     useEffect(() => {
         const timerId = setTimeout(() => {
-            buscarDados();
+            buscarAlunos();
         }, 300);
         return () => clearTimeout(timerId);
-    }, [buscarDados]);
+    }, [buscarAlunos]);
 
     const abrirModalCadastro = () => {
         setDocumentoEmEdicao(null);
@@ -143,8 +147,12 @@ const HomeDocumentos = (): ReactElement => {
                 await documentoService.cadastrar(dadosForm.alunoId, dadosParaEnviar);
                 showAlert("Documento cadastrado com sucesso!", "Sucesso!", "success");
             }
+
             fecharModalForm();
-            buscarDados();
+            const studentId = documentoEmEdicao?.aluno?.id || dadosForm.alunoId;
+            if (studentId) {
+                refreshStudentDocuments(studentId);
+            }
         } catch (error: any) {
             showAlert(error.response?.data || "Erro ao salvar documento.", "Erro!", "error");
         } finally {
@@ -155,33 +163,54 @@ const HomeDocumentos = (): ReactElement => {
     const handleVisualizarClick = async (doc: Documento) => {
         setDocumentoParaVisualizar(doc);
         setModalVisualizarVisivel(true);
+        setCarregandoModal(true);
         try {
             const docCompleto = await documentoService.buscarUm(doc.id);
             setDocumentoParaVisualizar(docCompleto);
         } catch (error) {
             showAlert("Erro ao carregar pré-visualização", "Erro", "error");
             setModalVisualizarVisivel(false);
-        }
-    };
-
-    const handleInativarClick = (e: MouseEvent, id: number) => {
-        e.stopPropagation();
-        setDocumentoParaInativar(id);
-        setModalInativarVisivel(true);
-    };
-
-    const handleConfirmarInativacao = async () => {
-        if (!documentoParaInativar) return;
-        try {
-            await documentoService.mudarStatus(documentoParaInativar);
-            showAlert("Status do documento alterado com sucesso.", "Sucesso!", "success");
-            buscarDados();
-        } catch (err) {
-            showAlert("Não foi possível alterar o status do documento.", "Erro", "error");
         } finally {
-            setDocumentoParaInativar(null);
-            setModalInativarVisivel(false);
+            setCarregandoModal(false);
         }
+    };
+
+    const loadAndShowDocuments = useCallback(async (alunoId: number, termo: string, pagina: number) => {
+        setLoadingDocumentos(true);
+        try {
+            const resposta = await documentoService.listarPorAluno(alunoId, pagina, termo);
+            setDocumentosPorAluno(prev => ({
+                ...prev,
+                [alunoId]: resposta
+            }));
+        } catch (err: any) {
+            showAlert("Erro ao carregar documentos do aluno.", "Erro!", "error");
+        } finally {
+            setLoadingDocumentos(false);
+        }
+    }, [showAlert]);
+
+    useEffect(() => {
+        if (expandedAlunoId) {
+            const timer = setTimeout(() => {
+                loadAndShowDocuments(expandedAlunoId, termoBuscaDocumento, paginaDocumentosAtual);
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [expandedAlunoId, termoBuscaDocumento, paginaDocumentosAtual, loadAndShowDocuments]);
+
+    const handleExpandToggle = (alunoId: number) => {
+        const newId = expandedAlunoId === alunoId ? null : alunoId;
+        setExpandedAlunoId(newId);
+        if (newId) {
+            setTermoBuscaDocumento('');
+            setPaginaDocumentosAtual(0);
+        }
+    };
+
+    const refreshStudentDocuments = (alunoId: number) => {
+        const pageToLoad = expandedAlunoId === alunoId ? paginaDocumentosAtual : 0;
+        loadAndShowDocuments(alunoId, expandedAlunoId === alunoId ? termoBuscaDocumento : '', pageToLoad);
     };
 
     const renderizarFormulario = () => (
@@ -207,55 +236,122 @@ const HomeDocumentos = (): ReactElement => {
             <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4 gap-3">
                 <div className="flex-grow-1">
                     <div className="d-flex align-items-center gap-2" style={{ maxWidth: '450px' }}>
-                        <Form.Control type="text" placeholder="Pesquisar por nome, matrícula ou CPF..." value={termoBusca} onChange={(e) => { setTermoBusca(e.target.value); setPaginaAtual(0); }} className="border-primary rounded-1" />
-                        <Botao variant="outline-primary" onClick={() => buscarDados()} icone={<Icone nome="refresh" />} title="Recarregar dados" />
+                        <Form.Control type="text" placeholder="Pesquisar por nome, matrícula ou CPF..." value={termoBuscaAluno} onChange={(e) => { setTermoBuscaAluno(e.target.value); setPaginaAlunosAtual(0); }} className="border-primary rounded-1" />
+                        <Botao variant="outline-primary" onClick={buscarAlunos} icone={<Icone nome="refresh" />} title="Recarregar dados" />
                     </div>
                 </div>
                 <div className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2">
-                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={abrirModalCadastro} texto="Cadastrar" /> 
+                    <Botao variant="primary" icone={<Icone nome="plus-circle" />} onClick={abrirModalCadastro} texto="Upload" />
                     <Botao variant="success" onClick={() => setShowGeneratorModal(true)} texto="Gerar PDF" icone={<Icone nome="file-earmark-pdf" />} />
                 </div>
             </div>
 
-            {carregando ? (
+            {carregandoAlunos ? (
                 <div className="d-flex justify-content-center my-5"><Spinner animation="border" /></div>
             ) : (
                 <>
                     <Table borderless={true} hover responsive>
                         <thead>
                             <tr className="thead-azul">
-                                <th>Aluno</th>
-                                <th>Tipo de Documento</th>
-                                <th>Nome do Arquivo</th>
-                                <th>Data do Documento</th>
-                                <th>Data de Upload</th>
+                                <th>Nome</th>
+                                <th>Matrícula</th>
+                                <th>CPF</th>
+                                <th>Data de Nascimento</th>
                                 <th className="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginaData?.content && paginaData.content.length > 0 ? (
-                                paginaData.content.map(doc => (
-                                    <tr key={doc.id} className="border border-primary tr-azul-hover" onClick={() => abrirModalEdicao(doc)} style={{ cursor: 'pointer' }}>
-                                        <td>{doc.aluno?.nome || 'N/A'}</td>
-                                        <td>{doc.tipoDocumento?.nome || 'N/A'}</td>
-                                        <td>{doc.titulo}</td>
-                                        <td>{formatarData(doc.dataDocumento || null)}</td> 
-                                        <td>{formatarData(doc.dataUpload || null)}</td>
+                            {alunosData?.content && alunosData.content.length > 0 ? (
+                                alunosData.content.map(aluno => (
+                                    <Fragment key={aluno.id}>
+                                        <tr className="border border-primary tr-azul-hover">
+                                        <td>{aluno.nome}</td>
+                                        <td>{aluno.matricula}</td>
+                                        <td>{aluno.cpf}</td>
+                                        <td>{formatarData(aluno.dataNascimento)}</td>
                                         <td className="text-center align-middle">
-                                            <Botao variant="link" className="p-0" title="Visualizar" onClick={(e) => { e.stopPropagation(); handleVisualizarClick(doc); }} icone={<Icone nome="eye" tamanho={20} />} />
-                                            <Botao variant="link" className="p-0 ms-2 text-danger" title="Inativar" onClick={(e) => handleInativarClick(e, doc.id)} icone={<Icone nome="ban" tamanho={20} />} />
+                                            <Botao
+                                                variant="link"
+                                                onClick={() => handleExpandToggle(aluno.id)}
+                                                title="Ver Documentos"
+                                                icone={<Icone nome={expandedAlunoId === aluno.id ? "chevron-up" : "chevron-down"} />}
+                                            />
                                         </td>
-                                    </tr>
+                                        </tr>
+                                        {expandedAlunoId === aluno.id && (
+                                        <tr className="tr-expanded">
+                                            <td colSpan={5}>
+                                                <div className="p-3 bg-light">
+                                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                                        <h5 className="mb-0 text-primary">Documentos</h5>
+                                                        <div className="d-flex align-items-center gap-2" style={{ maxWidth: '300px' }}>
+                                                            <Form.Control
+                                                                type="text"
+                                                                size="sm"
+                                                                placeholder="Filtrar documentos..."
+                                                                value={termoBuscaDocumento}
+                                                                onChange={(e) => setTermoBuscaDocumento(e.target.value)}
+                                                            />
+                                                            <Botao
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                onClick={() => refreshStudentDocuments(aluno.id)}
+                                                                icone={<Icone nome="refresh" />}
+                                                                title="Recarregar documentos"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {loadingDocumentos ? (
+                                                        <div className="text-center p-3"><Spinner size="sm" /> Carregando...</div>
+                                                    ) : documentosPorAluno[aluno.id]?.content && documentosPorAluno[aluno.id]!.content.length > 0 ? (
+                                                        <>
+                                                            <Table size="sm" hover responsive className="bg-white">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Título</th>
+                                                                        <th>Tipo</th>
+                                                                        <th>Data</th>
+                                                                        <th className="text-center">Ação</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {documentosPorAluno[aluno.id]!.content.map(doc => (
+                                                                        <tr key={doc.id} onClick={() => abrirModalEdicao(doc)} style={{ cursor: 'pointer' }}>
+                                                                            <td>{doc.titulo}</td>
+                                                                            <td>{doc.tipoDocumento?.nome || 'N/A'}</td>
+                                                                            <td>{formatarData(doc.dataDocumento)}</td>
+                                                                            <td className="text-center">
+                                                                                <Botao variant="link" className="p-0" title="Visualizar" onClick={(e) => { e.stopPropagation(); handleVisualizarClick(doc); }} icone={<Icone nome="eye" />} />
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </Table>
+                                                            <div className="d-flex justify-content-center align-items-center gap-2 mt-2">
+                                                                <Button size="sm" variant="outline-primary" onClick={() => setPaginaDocumentosAtual(p => p - 1)} disabled={documentosPorAluno[aluno.id]?.first}>&larr;</Button>
+                                                                <span>Página {documentosPorAluno[aluno.id]!.number + 1} de {documentosPorAluno[aluno.id]!.totalPages}</span>
+                                                                <Button size="sm" variant="outline-primary" onClick={() => setPaginaDocumentosAtual(p => p + 1)} disabled={documentosPorAluno[aluno.id]?.last}>&rarr;</Button>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-center text-muted p-3">Nenhum documento encontrado para este aluno.</div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        )}
+                                    </Fragment>
                                 ))
                             ) : (
-                                <tr><td colSpan={6} className="text-center">Nenhum documento encontrado.</td></tr>
+                                <tr><td colSpan={5} className="text-center">Nenhum aluno encontrado.</td></tr>
                             )}
                         </tbody>
                     </Table>
                     <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
-                        <Button variant="primary" onClick={() => setPaginaAtual(p => p - 1)} disabled={paginaData?.first}>&larr; Anterior</Button>
-                        <span>Página {paginaData ? paginaData.number + 1 : 0} de {paginaData?.totalPages ?? 0}</span>
-                        <Button variant="primary" onClick={() => setPaginaAtual(p => p + 1)} disabled={paginaData?.last}>Próxima &rarr;</Button>
+                        <Button variant="primary" onClick={() => setPaginaAlunosAtual(p => p - 1)} disabled={alunosData?.first}>&larr; Anterior</Button>
+                        <span>Página {alunosData ? alunosData.number + 1 : 0} de {alunosData?.totalPages ?? 0}</span>
+                        <Button variant="primary" onClick={() => setPaginaAlunosAtual(p => p + 1)} disabled={alunosData?.last}>Próxima &rarr;</Button>
                     </div>
                 </>
             )}
@@ -264,7 +360,7 @@ const HomeDocumentos = (): ReactElement => {
                 visivel={modalFormVisivel}
                 titulo={
                     documentoEmEdicao
-                        ? <> <Icone nome="pencil-square" className="me-2" /> Editar documento: {documentoEmEdicao.titulo} </>
+                        ? <> <Icone nome="pencil-square" className="me-2" /> Editar Documento </>
                         : <> <Icone nome="plus-square" className="me-2" /> Cadastrar novo documento </>
                 }
                 conteudo={renderizarFormulario()}
@@ -277,20 +373,11 @@ const HomeDocumentos = (): ReactElement => {
                 titleClassName="w-100 text-center"
                 closeButtonVariant="white"
             />
-            <ModalGenerico
-                visivel={modalInativarVisivel}
-                titulo="Confirmar Inativação"
-                mensagem="Deseja realmente inativar este documento?"
-                textoConfirmar="Inativar"
-                aoConfirmar={handleConfirmarInativacao}
-                textoCancelar="Cancelar"
-                aoCancelar={() => setModalInativarVisivel(false)}
-            />
 
             <DocumentGeneratorModal 
                 show={showGeneratorModal}
                 onHide={() => setShowGeneratorModal(false)}
-                onSuccess={buscarDados}
+                onSuccess={(alunoId) => { if (alunoId) refreshStudentDocuments(alunoId); }}
                 mode="aluno"
             />
 

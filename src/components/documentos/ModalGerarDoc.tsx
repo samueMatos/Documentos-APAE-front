@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
-import { documentoService } from '../../services/documentosService.ts';
+import { documentoService, GerarDocumentoAlunoDTO } from '../../services/documentosService.ts';
 import { alunoService } from '../../services/alunoService.ts';
+import institucionalService from '../../services/institucionalService.ts';
 import Botao from "../common/Botao.tsx";
 import Icone from "../common/Icone.tsx";
 import SelectAlunos from "../alunos/SelectAlunos.tsx";
@@ -16,6 +17,8 @@ interface DocumentoData {
     alunoId: number | null;
     colaborador: string;
     tipoDocumento: string;
+    titulo: string;
+    dataDocumento: string;
 }
 
 const initialState: DocumentoData = {
@@ -25,13 +28,15 @@ const initialState: DocumentoData = {
     instituicao: '',
     colaborador: '',
     alunoId: null,
-    tipoDocumento: ''
+    tipoDocumento: '',
+    titulo: '',
+    dataDocumento: ''
 };
 
 interface DocumentGeneratorModalProps {
     show: boolean;
     onHide: () => void;
-    onSuccess?: () => void;
+    onSuccess?: (id?: number) => void;
     initialData?: Partial<DocumentoData>;
     mode: 'aluno' | 'colaborador' | 'instituicao';
 }
@@ -77,14 +82,7 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
     };
 
     const validateForm = (): boolean => {
-        if (mode === 'aluno' && !documento.alunoId) {
-            alert("O campo Aluno é obrigatório.");
-            return false;
-        }
-        if (mode === 'colaborador' && !documento.colaborador.trim()) {
-            alert("O campo Colaborador é obrigatório.");
-            return false;
-        }
+        // Validações comuns a todos os modos
         if (!documento.tipoDocumento) {
             alert("O campo Tipo de Documento é obrigatório.");
             return false;
@@ -93,21 +91,48 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
             alert("O campo Corpo do Documento é obrigatório.");
             return false;
         }
+
+        // Validações específicas por modo
+        if (mode === 'aluno' && !documento.alunoId) {
+            alert("O campo Aluno é obrigatório.");
+            return false;
+        }
+        if (mode === 'colaborador' && !documento.colaborador.trim()) {
+            alert("O campo Colaborador é obrigatório.");
+            return false;
+        }
+        if (mode === 'instituicao' && (!documento.titulo.trim() || !documento.dataDocumento)) {
+            alert("Título e Data do Documento são obrigatórios.");
+            return false;
+        }
         return true;
     };
 
     const handlePreview = async () => {
         if (!validateForm()) return;
+
         setIsGenerating(true);
         try {
-            const payload = {
-                ...documento,
-                texto: documento.textoCorpo, 
-                aluno: selectedAluno?.nome || '',
+            if (mode === 'instituicao') {
+                const { titulo, textoCorpo, dataDocumento, tipoDocumento } = documento;
+                const dto = { titulo, texto: textoCorpo, dataDocumento, tipoDocumento };
+                const blob = await institucionalService.gerarPdfPreview(dto);
+                const url = URL.createObjectURL(blob);
+                setPreviewUrl(url);
+            } else if (mode === 'aluno' && documento.alunoId) {
+            const dto: GerarDocumentoAlunoDTO = {
+                texto: documento.textoCorpo,
+                alunoId: documento.alunoId,
+                tipoDocumento: documento.tipoDocumento,
+                textoCabecalho: documento.textoCabecalho,
+                textoRodape: documento.textoRodape,
             };
-            const blob = await documentoService.gerarPdfSimples(payload);
+            const blob = await documentoService.gerarPdfAluno(dto);
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
+            } else {
+                alert("A pré-visualização está disponível apenas para os modos 'aluno' e 'instituição'.");
+            }
         } catch (error) {
             console.error('Erro ao gerar pré-visualização:', error);
             alert('Não foi possível gerar a pré-visualização do PDF.');
@@ -132,22 +157,32 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
         if (!validateForm()) return;
         setIsGenerating(true);
         try {
-            const payload = {
-                ...documento,
-                texto: documento.textoCorpo, 
-                aluno: selectedAluno?.nome || '',
-            };
-            const blob = await documentoService.gerarPdfSimples(payload);
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `documento_${selectedAluno?.nome?.replace(/\s+/g, '_') || 'aluno'}_${new Date().toISOString().slice(0,10)}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            onSuccess?.();
+            if (mode === 'aluno' && documento.alunoId) {
+                const dto: GerarDocumentoAlunoDTO = {
+                    texto: documento.textoCorpo,
+                    alunoId: documento.alunoId,
+                    tipoDocumento: documento.tipoDocumento,
+                    textoCabecalho: documento.textoCabecalho,
+                    textoRodape: documento.textoRodape,
+                };
+                const blob = await documentoService.gerarPdfAluno(dto);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `documento_${selectedAluno?.nome?.replace(/\s+/g, '_') || 'aluno'}_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                onSuccess?.(documento.alunoId);
+            } else if (mode === 'instituicao') {
+                const { tipoDocumento, titulo, textoCorpo, dataDocumento } = documento;
+                await institucionalService.gerarESalvar({ titulo, texto: textoCorpo, dataDocumento, tipoDocumento });
+                alert('Documento institucional gerado e salvo com sucesso!');
+                onSuccess?.();
+            } else {
+                throw new Error("Modo de geração de documento não suportado ou dados insuficientes.");
+            }
             handleClose();
         } catch (error: any) {
             console.error('Erro ao gerar PDF:', error);
@@ -165,6 +200,14 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
         }
     };
 
+    const getGenerateButtonText = () => {
+        if (isGenerating) return <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> <span className="ms-2">Gerando...</span></>;
+        if (mode === 'instituicao') {
+            return 'Gerar e Salvar';
+        }
+        return 'Gerar e Baixar PDF';
+    };
+
     return (
         <>
             <Modal show={show} onHide={handleClose} centered size="lg" backdrop="static">
@@ -176,25 +219,57 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        <Row>
-                            {mode === 'aluno' && (
+                        {/* --- CAMPOS ESPECÍFICOS POR MODO --- */}
+                        {mode === 'aluno' && (
+                            <Row>
                                 <Col md={6}>
                                     <SelectAlunos value={documento.alunoId} onAlunoSelect={handleAlunoSelect} required disabled={!!initialData?.alunoId} />
                                 </Col>
-                            )}
-                            {mode === 'colaborador' && (
+                                <Col md={6}>
+                                    <SelectTipoDocumento name="tipoDocumento" value={documento.tipoDocumento} onChange={handleInputChange} required disabled={!!initialData?.tipoDocumento} />
+                                </Col>
+                            </Row>
+                        )}
+
+                        {mode === 'instituicao' && (
+                            <>
+                                <Row>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Título do Documento</Form.Label>
+                                            <Form.Control type="text" name="titulo" value={documento.titulo} onChange={handleInputChange} required />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Data do Documento</Form.Label>
+                                            <Form.Control type="date" name="dataDocumento" value={documento.dataDocumento} onChange={handleInputChange} required />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                                <SelectTipoDocumento name="tipoDocumento" value={documento.tipoDocumento} onChange={handleInputChange} required disabled={!!initialData?.tipoDocumento} />
+                            </>
+                        )}
+
+                        {mode === 'colaborador' && (
+                            <Row>
                                 <Col md={6}>
                                     <Form.Group className="mb-3"><Form.Label>Colaborador</Form.Label><Form.Control type="text" name="colaborador" value={documento.colaborador} onChange={handleInputChange} placeholder="Nome do colaborador que assina" required disabled={!!initialData?.colaborador} /></Form.Group>
                                 </Col>
-                            )}
-                            <Col md={mode === 'instituicao' ? 12 : 6}>
-                                <SelectTipoDocumento name="tipoDocumento" value={documento.tipoDocumento} onChange={handleInputChange} required disabled={!!initialData?.tipoDocumento} />
-                            </Col>
-                        </Row>
-                        <Form.Group className="mb-3"><Form.Label>Instituição</Form.Label><Form.Control type="text" name="instituicao" value={documento.instituicao} onChange={handleInputChange} placeholder="Ex: APAE de Cidade Exemplo" /></Form.Group>
-                        <Form.Group className="mb-3"><Form.Label>Cabeçalho</Form.Label><Form.Control type="text" name="textoCabecalho" value={documento.textoCabecalho} onChange={handleInputChange} /></Form.Group>
+                                <Col md={6}>
+                                    <SelectTipoDocumento name="tipoDocumento" value={documento.tipoDocumento} onChange={handleInputChange} required disabled={!!initialData?.tipoDocumento} />
+                                </Col>
+                            </Row>
+                        )}
+
+                        {/* --- CAMPOS COMUNS --- */}
+                        {(mode === 'aluno' || mode === 'colaborador') && (
+                            <Form.Group className="mb-3"><Form.Label>Cabeçalho</Form.Label><Form.Control type="text" name="textoCabecalho" value={documento.textoCabecalho} onChange={handleInputChange} /></Form.Group>
+                        )}
                         <Form.Group className="mb-3"><Form.Label>Corpo do Documento</Form.Label><Form.Control as="textarea" rows={8} name="textoCorpo" value={documento.textoCorpo} onChange={handleInputChange} required /></Form.Group>
-                        <Form.Group className="mb-3"><Form.Label>Rodapé</Form.Label><Form.Control type="text" name="textoRodape" value={documento.textoRodape} onChange={handleInputChange} /></Form.Group>
+                        {(mode === 'aluno' || mode === 'colaborador') && (
+                            <Form.Group className="mb-3"><Form.Label>Rodapé</Form.Label><Form.Control type="text" name="textoRodape" value={documento.textoRodape} onChange={handleInputChange} /></Form.Group>
+                        )}
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -203,7 +278,7 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                         {isGenerating ? 'Aguarde...' : 'Pré-visualizar'}
                     </Button>
                     <Button variant="success" onClick={handleGenerate} disabled={isGenerating}>
-                        {isGenerating ? (<><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> <span className="ms-2">Gerando...</span></>) : ('Gerar e Baixar PDF')}
+                        {getGenerateButtonText()}
                     </Button>
                 </Modal.Footer>
             </Modal>

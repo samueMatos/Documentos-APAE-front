@@ -28,8 +28,8 @@ const DocsColaboradores = (): ReactElement => {
     const buscarDados = useCallback(async () => {
         setCarregando(true);
         try {
-            const resposta = await documentoService.listar(paginaAtual, termoBusca);
-            setPaginaData(resposta);
+            //const resposta = await documentoService.listar(paginaAtual, termoBusca);
+            //setPaginaData(resposta);
         } catch (err: any) {
             showAlert(err.response?.data || "Erro ao carregar documentos.", "Erro!", "error");
         } finally {
@@ -49,8 +49,8 @@ const DocsColaboradores = (): ReactElement => {
         setModalVisualizarVisivel(true);
         setCarregandoModal(true);
         try {
-            const docCompleto = await documentoService.buscarUm(doc.id);
-            setDocumentoParaVisualizar(docCompleto);
+            //const docCompleto = await documentoService.buscarUm(doc.id);
+            //setDocumentoParaVisualizar(docCompleto);
         } catch (error) {
             showAlert("Erro ao carregar pré-visualização", "Erro", "error");
             setModalVisualizarVisivel(false);
@@ -68,7 +68,7 @@ const DocsColaboradores = (): ReactElement => {
     const handleConfirmarInativacao = async () => {
         if (!documentoParaInativar) return;
         try {
-            await documentoService.mudarStatus(documentoParaInativar);
+            //await documentoService.mudarStatus(documentoParaInativar);
             showAlert("Status do documento alterado com sucesso.", "Sucesso!", "success");
             buscarDados();
         } catch (err) {

@@ -1,9 +1,13 @@
+.tr-expanded > td {
+    padding: 0 !important;
+    border: none !important;
+}
+
 .tr-azul td {
   text-align: center;
 }
 
 .thead-azul th {
-  /* text-align: center; */
   color: var(--azul);
 }
 
