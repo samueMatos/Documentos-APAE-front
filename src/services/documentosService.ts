@@ -3,9 +3,9 @@ import api from './api';
 import { Page } from '../models/Page';
 import { Documento } from '../models/Documentos';
 
-export interface GerarDocumentoAlunoDTO {
+export interface GerarDocumentoPessoaDTO {
     texto: string;
-    alunoId: number;
+    pessoaId?: number;
     tipoDocumento: string;
     textoCabecalho: string;
     textoRodape: string;
@@ -31,29 +31,20 @@ export const documentoService = {
         return response.data;
     },
 
-    listarPorAluno: async (alunoId: number, pagina: number, termoBusca?: string): Promise<Page<Documento>> => {
+    listarPorPessoa: async (pessoaId: number, pagina: number, termoBusca?: string): Promise<Page<Documento>> => {
         const params: any = {
             page: pagina,
-            size: 10,
+            size: 5,
         };
 
         if (termoBusca) {
             params.termoBusca = termoBusca;
         }
 
-        const response = await api.get(`/documentos/listar/aluno/${alunoId}`, { params });
+        const response = await api.get(`/documentos/listar/pessoa/${pessoaId}`, { params });
         return response.data;
     },
-   
-    cadastrar: (alunoId: number, formData: FormData): Promise<any> => {
-        return api.post(`/documentos/create/${alunoId}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    },
 
-    
     buscarUm: async (id: number): Promise<Documento> => {
         const response = await api.get(`/documentos/listarUm/${id}`);
         return response.data;
@@ -64,15 +55,29 @@ export const documentoService = {
         return api.patch(`/documentos/${id}/status`);
     },
 
+    cadastrar: (alunoId: number, formData: FormData): Promise<any> => {
+        return api.post(`/documentos/create/${alunoId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
    atualizar: (id: number, formData: FormData): Promise<any> => {
         return api.put(`/documentos/update/${id}`, formData);
     }
     ,
 
-    gerarPdfAluno: (dto: GerarDocumentoAlunoDTO): Promise<Blob> => {
-        return api.post('/documentos/aluno/gerar-pdf', dto, {
+    visualizarDocPessoa: (dto: GerarDocumentoPessoaDTO): Promise<Blob> => {
+        return api.post('/documentos/visualizar', dto, {
             responseType: 'blob',
         }).then(response => response.data);
-    }
+    },
+    
 
+    salvarDocPessoa: (dto: GerarDocumentoPessoaDTO): Promise<Blob> => {
+        return api.post(`/documentos/gerar`, dto, {
+            responseType: 'blob',
+        }).then(response => response.data);
+    },
 };

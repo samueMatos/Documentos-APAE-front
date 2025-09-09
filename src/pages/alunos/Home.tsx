@@ -63,7 +63,14 @@ const Home = (): ReactElement => {
             <fieldset className="border border-primary-subtle rounded p-2 mb-2">
                 <legend className="float-none w-auto px-2 h6 m-0 text-primary">Dados Pessoais</legend>
                 <Row className="g-2">
-                    <Form.Group as={Col} md={6} controlId="nome"><Form.Label className="form-label-sm">Nome Completo<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="text" name="nome" value={dadosForm.nome} onChange={handleFormChange} required /></Form.Group>
+                    {alunoEmEdicao ? (
+                        <Col md={6}>
+                            <Form.Label className="form-label-sm">Nome Completo</Form.Label>
+                            <p className="form-control-plaintext ps-2 border rounded" style={{ minHeight: '31px' }}><strong>{dadosForm.nome}</strong></p>
+                        </Col>
+                    ) : (
+                        <Form.Group as={Col} md={6} controlId="nome"><Form.Label className="form-label-sm">Nome Completo<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="text" name="nome" value={dadosForm.nome} onChange={handleFormChange} required /></Form.Group>
+                    )}
                     <Form.Group as={Col} md={3} controlId="dataNascimento"><Form.Label className="form-label-sm">Nascimento<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="date" name="dataNascimento" value={dadosForm.dataNascimento ? dadosForm.dataNascimento.split('T')[0] : ''} onChange={handleFormChange} required /></Form.Group>
                     <Form.Group as={Col} md={3} controlId="cpf"><Form.Label className="form-label-sm">CPF<span className="text-danger">*</span></Form.Label><InputMask mask="999.999.999-99" value={dadosForm.cpf} onChange={handleFormChange}>{(inputProps: any) => <Form.Control size="sm" {...inputProps} type="text" name="cpf" required />}</InputMask></Form.Group>
                     <Form.Group as={Col} md={4} controlId="matricula"><Form.Label className="form-label-sm">Matrícula<span className="text-danger">*</span></Form.Label><Form.Control size="sm" type="number" name="matricula" value={dadosForm.matricula || ''} onChange={handleFormChange} required /></Form.Group>

@@ -34,7 +34,7 @@ const initialFormState: FormState = {
     file: null,
 };
 
-const HomeDocumentos = (): ReactElement => {
+const DocsAlunos = (): ReactElement => {
     const { showAlert } = useAlert();
     const [alunosData, setAlunosData] = useState<Page<Aluno> | null>(null);
     const [paginaAlunosAtual, setPaginaAlunosAtual] = useState(0);
@@ -55,6 +55,9 @@ const HomeDocumentos = (): ReactElement => {
     const [modalVisualizarVisivel, setModalVisualizarVisivel] = useState(false);
     const [documentoParaVisualizar, setDocumentoParaVisualizar] = useState<Documento | null>(null);
     const [showGeneratorModal, setShowGeneratorModal] = useState(false);
+
+    const [documentoParaDeletar, setDocumentoParaDeletar] = useState<Documento | null>(null);
+    const [modalDeletarVisivel, setModalDeletarVisivel] = useState<boolean>(false);
 
     const buscarAlunos = useCallback(async () => {
         setCarregandoAlunos(true);
@@ -84,7 +87,7 @@ const HomeDocumentos = (): ReactElement => {
     const abrirModalEdicao = (doc: Documento) => {
         setDocumentoEmEdicao(doc);
         setDadosForm({
-            alunoId: doc.aluno?.id || null,
+            alunoId: doc.pessoa?.id || null,
             tipoDocumento: doc.tipoDocumento?.nome || '',
             dataDocumento: doc.dataDocumento ? doc.dataDocumento.split('T')[0] : '',
             file: null
@@ -153,7 +156,7 @@ const HomeDocumentos = (): ReactElement => {
             if (studentId) {
                 refreshStudentDocuments(studentId);
             }
-        } catch (error: any) {
+        } catch (error: any) { 
             showAlert(error.response?.data || "Erro ao salvar documento.", "Erro!", "error");
         } finally {
             setCarregandoModal(false);
@@ -175,10 +178,32 @@ const HomeDocumentos = (): ReactElement => {
         }
     };
 
+    const handleDeleteClick = (e: MouseEvent, doc: Documento) => {
+        e.stopPropagation();
+        setDocumentoParaDeletar(doc);
+        setModalDeletarVisivel(true);
+    };
+
+    const handleConfirmarDelete = async () => {
+        if (!documentoParaDeletar) return;
+        try {
+            await documentoService.mudarStatus(documentoParaDeletar.id);
+            showAlert("Documento excluído com sucesso!", "Sucesso", "success");
+            if (expandedAlunoId) {
+                refreshStudentDocuments(expandedAlunoId);
+            }
+        } catch (err: any) {
+            showAlert(err.response?.data?.message || "Não foi possível excluir o documento.", "Erro", "error");
+        } finally {
+            setDocumentoParaDeletar(null);
+            setModalDeletarVisivel(false);
+        }
+    };
+
     const loadAndShowDocuments = useCallback(async (alunoId: number, termo: string, pagina: number) => {
         setLoadingDocumentos(true);
         try {
-            const resposta = await documentoService.listarPorAluno(alunoId, pagina, termo);
+            const resposta = await documentoService.listarPorPessoa(alunoId, pagina, termo);
             setDocumentosPorAluno(prev => ({
                 ...prev,
                 [alunoId]: resposta
@@ -215,7 +240,14 @@ const HomeDocumentos = (): ReactElement => {
 
     const renderizarFormulario = () => (
         <Form>
-            <SelectAlunos value={dadosForm.alunoId} onAlunoSelect={handleAlunoSelect} required={!documentoEmEdicao} disabled={!!documentoEmEdicao} />
+            {documentoEmEdicao ? (
+                <Form.Group className="mb-3">
+                    <Form.Label>Aluno</Form.Label>
+                    <p className="form-control-plaintext ps-2 border rounded" style={{ minHeight: '38px', paddingTop: '0.375rem' }}><strong>{documentoEmEdicao.pessoa?.nome || 'Carregando...'}</strong></p>
+                </Form.Group>
+            ) : (
+                <SelectAlunos value={dadosForm.alunoId} onAlunoSelect={handleAlunoSelect} required />
+            )}
             <SelectTipoDocumento name="tipoDocumento" value={dadosForm.tipoDocumento} onChange={handleFormChange} required />
             
             <Form.Group className="mb-3" controlId="dataDocumento">
@@ -323,6 +355,7 @@ const HomeDocumentos = (): ReactElement => {
                                                                             <td>{formatarData(doc.dataDocumento)}</td>
                                                                             <td className="text-center">
                                                                                 <Botao variant="link" className="p-0" title="Visualizar" onClick={(e) => { e.stopPropagation(); handleVisualizarClick(doc); }} icone={<Icone nome="eye" />} />
+                                                                                <Botao variant="link" className="p-0 ms-2 text-danger" title="Excluir" onClick={(e) => handleDeleteClick(e, doc)} icone={<Icone nome="trash" />} />
                                                                             </td>
                                                                         </tr>
                                                                     ))}
@@ -374,6 +407,16 @@ const HomeDocumentos = (): ReactElement => {
                 closeButtonVariant="white"
             />
 
+            <ModalGenerico
+                visivel={modalDeletarVisivel}
+                titulo="Confirmar Exclusão"
+                mensagem={`Deseja realmente excluir o documento "${documentoParaDeletar?.titulo}"?`}
+                textoConfirmar="Excluir"
+                variantConfirmar="danger"
+                aoConfirmar={handleConfirmarDelete}
+                aoCancelar={() => setModalDeletarVisivel(false)}
+            />
+
             <DocumentGeneratorModal 
                 show={showGeneratorModal}
                 onHide={() => setShowGeneratorModal(false)}
@@ -401,4 +444,4 @@ const HomeDocumentos = (): ReactElement => {
     );
 };
 
-export default HomeDocumentos;
+export default DocsAlunos;

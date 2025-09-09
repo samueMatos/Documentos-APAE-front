@@ -33,6 +33,10 @@ const changeStatus = async (id: number): Promise<void> => {
     await api.patch(`/tipo-documento/${id}/status`);
 };
 
+// const visualizarInstitucionais = async () {
+//     const response = await api.get()
+// };
+
 
 
 export const tipoDocumentoService = {

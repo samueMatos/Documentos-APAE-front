@@ -4,6 +4,10 @@ export interface TipoDocumentoRequest {
     nome: string;
     validade: number;
     isAtivo: boolean;
+    guardaPermanente: boolean;
+    institucional: boolean;
+    documentoAssinavel: boolean;
+    podeGerarDocumento: boolean;
   }
   
 export interface TipoDocumentoResponse {
@@ -15,4 +19,8 @@ export interface TipoDocumentoResponse {
     dataRegistro: string | null; 
     validade: number;
     isAtivo: boolean;
+    guardaPermanente: boolean;
+    institucional: boolean;
+    documentoAssinavel: boolean;
+    podeGerarDocumento: boolean;
   }

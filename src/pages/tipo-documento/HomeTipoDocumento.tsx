@@ -33,8 +33,9 @@ interface DadosFormTipoDoc {
     valorValidade: number;
     unidadeValidade: UnidadeTempo;
     guardaPermanente: boolean;
-
-
+    institucional: boolean;
+    documentoAssinavel: boolean;
+    podeGerarDocumento: boolean;
 }
 
 const HomeTipoDocumento = (): ReactElement => {
@@ -55,7 +56,11 @@ const HomeTipoDocumento = (): ReactElement => {
     const [dadosForm, setDadosForm] = useState<DadosFormTipoDoc>({
         nome: '',
         valorValidade: 1,
-        unidadeValidade: 'Dias'
+        unidadeValidade: 'Dias',
+        guardaPermanente: false,
+        institucional: false,
+        documentoAssinavel: false,
+        podeGerarDocumento: false
     });
 
 
@@ -79,19 +84,41 @@ const HomeTipoDocumento = (): ReactElement => {
         return () => clearTimeout(timerId);
     }, [buscarDados]);
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => { const { name, value } = e.target; setDadosForm(prev => ({ ...prev, [name]: value })); };
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, type } = e.target;
+
+        if (type === 'checkbox') {
+            const { checked } = e.target as HTMLInputElement;
+            setDadosForm(prev => ({ ...prev, [name]: checked }));
+        } else {
+            const { value } = e.target;
+            setDadosForm(prev => ({ ...prev, [name]: value }));
+        }
+    };
 
 
     const abrirModalCadastro = () => {
         setItemEmEdicao(null);
-        setDadosForm({ nome: '', valorValidade: 1, unidadeValidade: 'Dias' });
+        setDadosForm({
+            nome: '',
+            valorValidade: 1,
+            unidadeValidade: 'Dias',
+            guardaPermanente: false,
+            institucional: false,
+            documentoAssinavel: false,
+            podeGerarDocumento: false
+        });
         setModalFormVisivel(true);
     };
 
     const abrirModalEdicao = (item: TipoDocumentoResponse) => {
         setItemEmEdicao(item);
         const { valor, unidade } = decomporDias(item.validade);
-        setDadosForm({ nome: item.nome, valorValidade: valor, unidadeValidade: unidade });
+        setDadosForm({
+            nome: item.nome, valorValidade: valor, unidadeValidade: unidade,
+            guardaPermanente: item.guardaPermanente, institucional: item.institucional,
+            documentoAssinavel: item.documentoAssinavel, podeGerarDocumento: item.podeGerarDocumento
+        });
         setModalFormVisivel(true);
     };
 
@@ -105,7 +132,15 @@ const HomeTipoDocumento = (): ReactElement => {
 
     const handleSalvar = async () => {
     const totalDias = calcularTotalDias(dadosForm.valorValidade, dadosForm.unidadeValidade);
-    const payload: TipoDocumentoRequest = { nome: dadosForm.nome, validade: totalDias, isAtivo: true };
+    const payload: TipoDocumentoRequest = {
+        nome: dadosForm.nome,
+        validade: totalDias,
+        isAtivo: true,
+        guardaPermanente: dadosForm.guardaPermanente,
+        institucional: dadosForm.institucional,
+        documentoAssinavel: dadosForm.documentoAssinavel,
+        podeGerarDocumento: dadosForm.podeGerarDocumento
+    };
 
     try {
         if (itemEmEdicao) {
@@ -121,7 +156,7 @@ const HomeTipoDocumento = (): ReactElement => {
 
 
         const errorData = error.response?.data;
-        let errorMessage = "Ocorreu um erro ao salvar."; // Mensagem padrão
+        let errorMessage = "Ocorreu um erro ao salvar.";
 
         if (typeof errorData === 'string' && errorData) {
             
@@ -165,32 +200,41 @@ const HomeTipoDocumento = (): ReactElement => {
     };
 
     const renderizarFormulario = () => (
-        <fieldset className="border border-primary-subtle rounded p-2 mb-2">
-            <legend className="float-none w-auto px-2 h6 m-0 text-primary">Informações</legend>
-            <Form>
-                <Form.Group className="mb-3" controlId="nome">
-                    <Form.Label className="form-label-md">Nome do tipo de documento <span className="text-danger">*</span></Form.Label>
-                    <Form.Control size="md" type="text" name="nome" value={dadosForm.nome} onChange={handleFormChange} required />
-                </Form.Group>
-                <Form.Group controlId="validade">
-                    <Form.Label className="form-label-md">Prazo de vigência <span className="text-danger">*</span></Form.Label>
-                    <InputGroup size="md">
-                        <Form.Control type="number" name="valorValidade" value={dadosForm.valorValidade} onChange={e => {
-                            const value = e.target.value;
+        <>
+            <fieldset className="border border-primary-subtle rounded p-2 mb-2">
+                <legend className="float-none w-auto px-2 h6 m-0 text-primary">Informações</legend>
+                <Form>
+                    <Form.Group className="mb-3" controlId="nome">
+                        <Form.Label className="form-label-md">Nome do tipo de documento <span className="text-danger">*</span></Form.Label>
+                        <Form.Control size="md" type="text" name="nome" value={dadosForm.nome} onChange={handleFormChange} required />
+                    </Form.Group>
+                    <Form.Group controlId="validade">
+                        <Form.Label className="form-label-md">Prazo de vigência <span className="text-danger">*</span></Form.Label>
+                        <InputGroup size="md">
+                            <Form.Control type="number" name="valorValidade" value={dadosForm.valorValidade} onChange={e => {
+                                const value = e.target.value;
 
-                            const _dadosForm = {...dadosForm};
-                            _dadosForm.valorValidade = Number(value.replace(/[^0-9]/g, ''));
-                            setDadosForm(_dadosForm);
-                        }} min="1" required />
-                        <Form.Select name="unidadeValidade" value={dadosForm.unidadeValidade} onChange={handleFormChange} style={{ maxWidth: "120px" }}>
-                            <option value="Dias">Dias</option>
-                            <option value="Meses">Meses</option>
-                            <option value="Anos">Anos</option>
-                        </Form.Select>
-                    </InputGroup>
-                </Form.Group>
-            </Form>
-        </fieldset>
+                                const _dadosForm = {...dadosForm};
+                                _dadosForm.valorValidade = Number(value.replace(/[^0-9]/g, ''));
+                                setDadosForm(_dadosForm);
+                            }} min="1" required />
+                            <Form.Select name="unidadeValidade" value={dadosForm.unidadeValidade} onChange={handleFormChange} style={{ maxWidth: "120px" }}>
+                                <option value="Dias">Dias</option>
+                                <option value="Meses">Meses</option>
+                                <option value="Anos">Anos</option>
+                            </Form.Select>
+                        </InputGroup>
+                    </Form.Group>
+                </Form>
+            </fieldset>
+            <fieldset className="border border-primary-subtle rounded p-2">
+                <legend className="float-none w-auto px-2 h6 m-0 text-primary">Configurações</legend>
+                <Form.Check className="mb-2" type="switch" id="guardaPermanente" name="guardaPermanente" label="Guarda Permanente" checked={dadosForm.guardaPermanente} onChange={handleFormChange} />
+                <Form.Check className="mb-2" type="switch" id="institucional" name="institucional" label="Institucional" checked={dadosForm.institucional} onChange={handleFormChange} />
+                <Form.Check className="mb-2" type="switch" id="documentoAssinavel" name="documentoAssinavel" label="Documento Assinável" checked={dadosForm.documentoAssinavel} onChange={handleFormChange} />
+                <Form.Check className="mb-2" type="switch" id="podeGerarDocumento" name="podeGerarDocumento" label="Permissão para geração de PDF" checked={dadosForm.podeGerarDocumento} onChange={handleFormChange} />
+            </fieldset>
+        </>
     );
 
     return (

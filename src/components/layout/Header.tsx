@@ -40,8 +40,16 @@ const Header = (): ReactElement => {
 
 
     const navLinks: NavLinkItem[] = [
-        { path: "/", text: "Início", icon: "fa-solid fa-house", permissions: ["ALUNOS", "DOCUMENTOS", "TIPO_DOCUMENTO", "GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"] },
-        { path: "/alunos", text: "Alunos", icon: "fa-solid fa-address-book", permissions: ["ALUNOS"] },
+        { path: "/", text: "Início", icon: "fa-solid fa-house", permissions: ["ALUNOS", "DOCUMENTOS", "TIPO_DOCUMENTO", "GRUPOS_PERMISSOES", "GERENCIAR_USUARIO", "GERENCIAR_COLABORADORES"] },
+        {
+            text: "Pessoa",
+            icon: "fa-solid fa-users",
+            permissions: ["ALUNOS", "GERENCIAR_COLABORADORES"],
+            subItems: [
+                { path: "/alunos", text: "Alunos", icon: "fa-solid fa-user-graduate", permissions: ["ALUNOS"] },
+                { path: "/colaboradores", text: "Colaboradores", icon: "fa-solid fa-user-tie", permissions: ["GERENCIAR_COLABORADORES"] },
+            ]
+        },
         { 
             text: "Documentos", 
             icon: "fa-solid fa-folder-open", 
@@ -63,9 +71,9 @@ const Header = (): ReactElement => {
         { 
             text: "Administração", 
             icon: "fa-solid fa-shield-halved", 
-            permissions: ["GRUPOS_PERMISSOES", "GERENCIAR_USUARIO"],
+            permissions: ["GRUPOS_PERMISSOES", "GERENCIAR_USUARIO", "GERENCIAR_COLABORADORES"],
             subItems: [
-                { path: "/usuarios", text: "Gerenciar Usuários", icon: "fas fa-user-cog", permissions: ["GERENCIAR_USUARIO"] },
+                { path: "/usuarios", text: "Gerenciar Usuários", icon: "fas fa-user-cog", permissions: ["GERENCIAR_USUARIO"] },                
                 { path: "/admin/grupos", text: "Grupos e Permissões", icon: "fa-solid fa-users-cog", permissions: ["GRUPOS_PERMISSOES"] },
             ]
         },

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
-import { documentoService, GerarDocumentoAlunoDTO } from '../../services/documentosService.ts';
+import { documentoService, GerarDocumentoPessoaDTO } from '../../services/documentosService.ts';
 import { alunoService } from '../../services/alunoService.ts';
 import institucionalService from '../../services/institucionalService.ts';
-import Botao from "../common/Botao.tsx";
+import { ColaboradorResponse } from "../../services/colaboradorService.ts";
 import Icone from "../common/Icone.tsx";
 import SelectAlunos from "../alunos/SelectAlunos.tsx";
 import Aluno from "../../models/Aluno.ts";
 import SelectTipoDocumento from "../tipoDocumento/SelectTipoDocumento.tsx";
+import SelectColaboradores from "../colaboradores/SelectColaboradores.tsx";
 
 interface DocumentoData {
     textoCabecalho: string;
@@ -15,7 +16,7 @@ interface DocumentoData {
     textoRodape: string;
     instituicao: string;
     alunoId: number | null;
-    colaborador: string;
+    colaboradorId: number | null;
     tipoDocumento: string;
     titulo: string;
     dataDocumento: string;
@@ -26,7 +27,7 @@ const initialState: DocumentoData = {
     textoCorpo: '',
     textoRodape: '',
     instituicao: '',
-    colaborador: '',
+    colaboradorId: null,
     alunoId: null,
     tipoDocumento: '',
     titulo: '',
@@ -45,6 +46,7 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
     const [documento, setDocumento] = useState<DocumentoData>(initialState);
     const [isGenerating, setIsGenerating] = useState(false);
     const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
+    const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorResponse | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -59,13 +61,17 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                     console.error("Erro ao buscar aluno inicial", err);
                     setSelectedAluno(null);
                 });
+            } else if (mode === 'colaborador' && combinedData.colaboradorId) {
+
             } else {
                 setSelectedAluno(null);
+                setSelectedColaborador(null);
             }
         } else {
             setTimeout(() => {
                 setDocumento(initialState);
                 setSelectedAluno(null);
+                setSelectedColaborador(null);
                 handleClosePreview();
             }, 200);
         }
@@ -82,7 +88,6 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
     };
 
     const validateForm = (): boolean => {
-        // Validações comuns a todos os modos
         if (!documento.tipoDocumento) {
             alert("O campo Tipo de Documento é obrigatório.");
             return false;
@@ -92,12 +97,11 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
             return false;
         }
 
-        // Validações específicas por modo
         if (mode === 'aluno' && !documento.alunoId) {
             alert("O campo Aluno é obrigatório.");
             return false;
         }
-        if (mode === 'colaborador' && !documento.colaborador.trim()) {
+        if (mode === 'colaborador' && !documento.colaboradorId) {
             alert("O campo Colaborador é obrigatório.");
             return false;
         }
@@ -119,19 +123,19 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                 const blob = await institucionalService.gerarPdfPreview(dto);
                 const url = URL.createObjectURL(blob);
                 setPreviewUrl(url);
-            } else if (mode === 'aluno' && documento.alunoId) {
-            const dto: GerarDocumentoAlunoDTO = {
-                texto: documento.textoCorpo,
-                alunoId: documento.alunoId,
-                tipoDocumento: documento.tipoDocumento,
-                textoCabecalho: documento.textoCabecalho,
-                textoRodape: documento.textoRodape,
-            };
-            const blob = await documentoService.gerarPdfAluno(dto);
-            const url = URL.createObjectURL(blob);
-            setPreviewUrl(url);
+            } else if ((mode === 'aluno' && documento.alunoId) || (mode === 'colaborador' && documento.colaboradorId)) {
+                const dto: GerarDocumentoPessoaDTO = {
+                    texto: documento.textoCorpo,
+                    pessoaId: mode === 'aluno' ? documento.alunoId! : documento.colaboradorId!,
+                    tipoDocumento: documento.tipoDocumento,
+                    textoCabecalho: documento.textoCabecalho,
+                    textoRodape: documento.textoRodape,
+                };
+                const blob = await documentoService.visualizarDocPessoa(dto);
+                const url = URL.createObjectURL(blob);
+                setPreviewUrl(url);
             } else {
-                alert("A pré-visualização está disponível apenas para os modos 'aluno' e 'instituição'.");
+                alert("A pré-visualização está disponível apenas para os modos 'aluno', 'colaborador' e 'instituição' com uma pessoa selecionada.");
             }
         } catch (error) {
             console.error('Erro ao gerar pré-visualização:', error);
@@ -153,19 +157,24 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
         setDocumento(prev => ({ ...prev, alunoId: aluno?.id || null }));
     };
 
+    const handleColaboradorSelect = (colaborador: ColaboradorResponse | null) => {
+        setSelectedColaborador(colaborador);
+        setDocumento(prev => ({ ...prev, colaboradorId: colaborador?.id || null }));
+    };
+
     const handleGenerate = async () => {
         if (!validateForm()) return;
         setIsGenerating(true);
         try {
             if (mode === 'aluno' && documento.alunoId) {
-                const dto: GerarDocumentoAlunoDTO = {
+                const dto: GerarDocumentoPessoaDTO = {
                     texto: documento.textoCorpo,
-                    alunoId: documento.alunoId,
+                    pessoaId: documento.alunoId,
                     tipoDocumento: documento.tipoDocumento,
                     textoCabecalho: documento.textoCabecalho,
                     textoRodape: documento.textoRodape,
                 };
-                const blob = await documentoService.gerarPdfAluno(dto);
+                const blob = await documentoService.salvarDocPessoa(dto);
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
@@ -175,6 +184,24 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
                 onSuccess?.(documento.alunoId);
+            } else if (mode === 'colaborador' && documento.colaboradorId) {
+                const dto: GerarDocumentoPessoaDTO = {
+                    texto: documento.textoCorpo,
+                    pessoaId: documento.colaboradorId,
+                    tipoDocumento: documento.tipoDocumento,
+                    textoCabecalho: documento.textoCabecalho,
+                    textoRodape: documento.textoRodape,
+                };
+                const blob = await documentoService.salvarDocPessoa(dto);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `documento_${selectedColaborador?.nome?.replace(/\s+/g, '_') || 'colaborador'}_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                onSuccess?.(documento.colaboradorId);
             } else if (mode === 'instituicao') {
                 const { tipoDocumento, titulo, textoCorpo, dataDocumento } = documento;
                 await institucionalService.gerarESalvar({ titulo, texto: textoCorpo, dataDocumento, tipoDocumento });
@@ -219,7 +246,6 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        {/* --- CAMPOS ESPECÍFICOS POR MODO --- */}
                         {mode === 'aluno' && (
                             <Row>
                                 <Col md={6}>
@@ -254,7 +280,7 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                         {mode === 'colaborador' && (
                             <Row>
                                 <Col md={6}>
-                                    <Form.Group className="mb-3"><Form.Label>Colaborador</Form.Label><Form.Control type="text" name="colaborador" value={documento.colaborador} onChange={handleInputChange} placeholder="Nome do colaborador que assina" required disabled={!!initialData?.colaborador} /></Form.Group>
+                                    <SelectColaboradores onColaboradorSelect={handleColaboradorSelect} required disabled={!!initialData?.colaboradorId} />
                                 </Col>
                                 <Col md={6}>
                                     <SelectTipoDocumento name="tipoDocumento" value={documento.tipoDocumento} onChange={handleInputChange} required disabled={!!initialData?.tipoDocumento} />
@@ -262,7 +288,6 @@ const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({ show, o
                             </Row>
                         )}
 
-                        {/* --- CAMPOS COMUNS --- */}
                         {(mode === 'aluno' || mode === 'colaborador') && (
                             <Form.Group className="mb-3"><Form.Label>Cabeçalho</Form.Label><Form.Control type="text" name="textoCabecalho" value={documento.textoCabecalho} onChange={handleInputChange} /></Form.Group>
                         )}

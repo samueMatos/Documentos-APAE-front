@@ -1,5 +1,5 @@
 
-interface AlunoSimplificado {
+interface PessoaSimplificada {
     id: number;
     nome: string;
 }
@@ -15,7 +15,8 @@ export interface Documento {
     titulo: string;                  
     dataUpload: string;
     dataDocumento?: string;              
-    aluno?: AlunoSimplificado;       
+    aluno?: PessoaSimplificada;
+    pessoa?: PessoaSimplificada;
     tipoDocumento?: TipoDocumentoSimplificado;
     tipoConteudo?: string;             
     documento?: string;  
